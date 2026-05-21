@@ -18,7 +18,7 @@ export function Hero() {
       <div className="absolute inset-0">
         <Image
           src="/mainBackground.jpg"
-          alt="تشكيلة مشويات شرقية"
+          alt="مشويات الأصلي - أصل المشويات"
           fill
           className="object-cover"
           style={{ objectPosition: 'top center', top: '12%' }}
@@ -30,13 +30,13 @@ export function Hero() {
       {/* Content */}
       <div className="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
         <p className="text-secondary/90 uppercase tracking-[0.3em] text-sm md:text-base mb-4">
-          مشويات شرقية أصيلة
+       مشويات الأصلي - أصل المشويات
         </p>
         <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-card mb-6 leading-tight text-balance">
           تذوق طعم الشرق الأصيل
         </h1>
         <p className="text-secondary/80 text-lg md:text-xl max-w-2xl mx-auto mb-8 leading-relaxed">
-          اكتشف أشهى المشويات الشرقية المصنوعة بحب وعناية،
+          اكتشف أصل المشويات  المصنوعة بحب وعناية،
           بأجود المكونات ووصفات تقليدية توارثناها عبر الأجيال.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

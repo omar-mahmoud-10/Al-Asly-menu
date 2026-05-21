@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Phone, MapPin, Clock, Facebook, Instagram, Store, Send } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -42,6 +42,13 @@ const deliveryPrices = [
 
 export function Footer() {
   const [showDelivery, setShowDelivery] = useState(false)
+  const [isOpenHours, setIsOpenHours] = useState<boolean>(() => {
+    const now = new Date()
+    const time = now.getHours() + now.getMinutes() / 60
+    const start = 8 + 30 / 60 // 8:30
+    const end = 23 // 23:00
+    return time >= start && time < end
+  })
 
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault()
@@ -63,31 +70,48 @@ export function Footer() {
   const PhoneDisplay = ({ phone }: { phone: string }) => (
     <div className="flex gap-1.5 items-center flex-wrap w-full">
       <span dir="ltr" className="text-sm font-medium whitespace-nowrap">{phone}</span>
-      <Button
-        size="sm"
-        className="h-6 text-xs px-2 bg-blue-600 hover:bg-blue-700 text-white flex-shrink-0 gap-1"
-        onClick={() => handleCall(phone)}
-        title="اتصل الآن"
-      >
-        <Phone className="w-3 h-3" />
-        <span>اتصل بنا</span>
-      </Button>
-      <Button
-        size="sm"
-        className="h-6 text-xs px-2 bg-green-600 hover:bg-green-700 text-white flex-shrink-0 gap-1"
-        onClick={() => handleWhatsApp(phone)}
-        title="واتساب"
-      >
-        <Send className="w-3 h-3" />
-        <span>واتس</span>
-      </Button>
+      {isOpenHours && (
+        <>
+          <Button
+            size="sm"
+            className="h-6 text-xs px-2 bg-blue-600 hover:bg-blue-700 text-white flex-shrink-0 gap-1"
+            onClick={() => handleCall(phone)}
+            title="اتصل الآن"
+          >
+            <Phone className="w-3 h-3" />
+            <span>اتصل بنا</span>
+          </Button>
+          <Button
+            size="sm"
+            className="h-6 text-xs px-2 bg-green-600 hover:bg-green-700 text-white flex-shrink-0 gap-1"
+            onClick={() => handleWhatsApp(phone)}
+            title="واتساب"
+          >
+            <Send className="w-3 h-3" />
+            <span>واتس</span>
+          </Button>
+        </>
+      )}
     </div>
   )
+
+  useEffect(() => {
+    const check = () => {
+      const now = new Date()
+      const time = now.getHours() + now.getMinutes() / 60
+      const start = 8 + 30 / 60 // 8:30
+      const end = 23 // 23:00
+      setIsOpenHours(time >= start && time < end)
+    }
+
+    const id = setInterval(check, 60_000)
+    return () => clearInterval(id)
+  }, [])
 
   return (
     <footer id="contact" className="bg-foreground text-card py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <div id="branches" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
+        <div id="branches" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           {/* Brand */}
           <div className="lg:col-span-1">
             <h3 className="font-serif text-2xl font-bold mb-4">حاتي الأصلي</h3>
@@ -178,17 +202,6 @@ export function Footer() {
                 >
                   خدمة التوصيل
                 </button>
-              </li>
-            </ul>
-          </div>
-
-          {/* Contact Info */}
-          <div>
-            <h4 className="font-serif text-lg font-semibold mb-4">تواصل معنا</h4>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-3 text-card/70">
-                <MapPin className="w-4 h-4 text-primary mt-1" />
-                <span>بركة السبع، المنوفية، مصر</span>
               </li>
             </ul>
           </div>
