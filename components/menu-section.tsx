@@ -45,10 +45,10 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
             اكتشف نكهاتنا
           </p>
           <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
-            قائمة الحلويات
+            قائمة المشويات
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            كل قطعة حلوى تحكي قصة من التراث، مصنوعة بوصفات أصيلة 
+            كل طبق مشويات يحكي قصة من التراث، مصنوعة بوصفات أصيلة 
             توارثناها عبر الأجيال.
           </p>
         </div>

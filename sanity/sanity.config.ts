@@ -6,7 +6,7 @@ import { schemaTypes } from './schema'
 
 export default defineConfig({
   name: 'yaqut-store',
-  title: 'سلسلة متاجر حلويات ياقوت',
+  title: 'محل مشويات حاتي الأصلي',
   projectId: getProjectId() || '',
   dataset: getDataset(),
   plugins: [

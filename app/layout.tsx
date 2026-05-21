@@ -3,26 +3,26 @@ import { Amiri, Cairo } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
-const amiri = Amiri({ 
+const amiri = Amiri({
   subsets: ["arabic"],
   weight: ["400", "700"],
   variable: '--font-serif'
 });
-const cairo = Cairo({ 
+const cairo = Cairo({
   subsets: ["arabic"],
   variable: '--font-sans'
 });
 
 export const metadata: Metadata = {
-  title: 'سلسلة متاجر حلويات ياقوت | حلويات شرقية أصيلة',
-  description: 'اكتشف أشهى الحلويات الشرقية في سلسلة متاجر حلويات ياقوت. بقلاوة، كنافة، بسبوسة، ومعمول بأجود المكونات.',
+  title: 'محل مشويات حاتي الأصلي | مشويات شرقية أصيلة',
+  description: 'اكتشف أشهى المشويات الشرقية في محل مشويات حاتي الأصلي. شيش طاووق، كباب، ريش، وأطباق مشوية بأجود المكونات.',
   generator: 'v0.app',
   icons: {
-    icon: '/logo.jpg',
-    apple: '/logo.jpg',
+    icon: '/logo_metaTitle.jpg',
+    apple: '/logo_metaTitle.jpg',
   },
   openGraph: {
-    images: ['/logo.jpg'],
+    images: ['/logo_metaTitle.jpg'],
   },
 }
 

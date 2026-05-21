@@ -30,23 +30,23 @@ export function Header() {
             <span>مفتوح يومياً: ٨:٣٠ ص - ١١:٠٠ م</span>
           </div>
         </div>
-        
+
         {/* Main nav */}
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2">
             <span className="font-serif text-2xl md:text-3xl font-bold text-foreground tracking-tight">
-              سلسلة متاجر حلويات ياقوت
+              محل مشويات حاتي الأصلي
             </span>
           </Link>
 
-            <nav className="hidden md:flex items-center gap-6">
-              <button onClick={() => scrollToSection("branches")} className="text-foreground hover:text-primary transition-colors font-medium cursor-pointer bg-transparent border-none p-0">فروعنا</button>
-              <button onClick={() => scrollToSection("menu")} className="text-foreground hover:text-primary transition-colors font-medium cursor-pointer bg-transparent border-none p-0">القائمة</button>
-              <button onClick={() => scrollToSection("about")} className="text-foreground hover:text-primary transition-colors font-medium cursor-pointer bg-transparent border-none p-0">من نحن</button>
-              <Button variant="outline" onClick={() => scrollToSection("contact")} className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
-                تواصل معنا
-              </Button>
-            </nav>
+          <nav className="hidden md:flex items-center gap-6">
+            <button onClick={() => scrollToSection("branches")} className="text-foreground hover:text-primary transition-colors font-medium cursor-pointer bg-transparent border-none p-0">فروعنا</button>
+            <button onClick={() => scrollToSection("menu")} className="text-foreground hover:text-primary transition-colors font-medium cursor-pointer bg-transparent border-none p-0">القائمة</button>
+            <button onClick={() => scrollToSection("about")} className="text-foreground hover:text-primary transition-colors font-medium cursor-pointer bg-transparent border-none p-0">من نحن</button>
+            <Button variant="outline" onClick={() => scrollToSection("contact")} className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+              تواصل معنا
+            </Button>
+          </nav>
 
           {/* Mobile Menu Button */}
           <button

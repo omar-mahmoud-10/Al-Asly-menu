@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Phone, MapPin, Clock, Facebook, Instagram, Store } from "lucide-react"
+import { Phone, MapPin, Clock, Facebook, Instagram, Store, MessageCircle } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 
 const deliveryPrices = [
   { area: "بركة السبع", price: "١٥ جنيهاً" },
@@ -50,19 +51,56 @@ export function Footer() {
     }
   }
 
+  const handleCall = (phone: string) => {
+    window.location.href = `tel:${phone}`
+  }
+
+  const handleWhatsApp = (phone: string) => {
+    const message = "مرحبا، أود الاستفسار عن الطلب"
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank')
+  }
+
+  const PhoneDisplay = ({ phone }: { phone: string }) => (
+    <>
+      {/* Desktop view */}
+      <span dir="ltr" className="hidden md:inline">{phone}</span>
+      {/* Mobile/Tablet view */}
+      <div className="md:hidden flex gap-2 items-center flex-wrap">
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7 text-xs border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+          onClick={() => handleCall(phone)}
+        >
+          <Phone className="w-3 h-3 ml-1" />
+          اتصل
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7 text-xs border-green-500 text-green-500 hover:bg-green-500 hover:text-white"
+          onClick={() => handleWhatsApp(phone)}
+        >
+          <MessageCircle className="w-3 h-3 ml-1" />
+          واتس
+        </Button>
+      </div>
+    </>
+  )
+
   return (
     <footer id="contact" className="bg-foreground text-card py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div id="branches" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <h3 className="font-serif text-2xl font-bold mb-4">سلسلة متاجر حلويات ياقوت</h3>
+            <h3 className="font-serif text-2xl font-bold mb-4">حاتي الأصلي</h3>
             <p className="text-card/70 text-sm leading-relaxed mb-4">
-              اهلاً بك في حلويات ياقوت ❤️ نقدم أشهى الحلويات الشرقية الأصيلة في المنوفية.
+              أصل المشوي | كبابجي
             </p>
             <div className="flex gap-4">
               <a
-                href="https://www.instagram.com/yakootsweet/"
+                href="https://www.instagram.com/elasly_resturant_/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-card/10 flex items-center justify-center hover:bg-card/20 transition-colors"
@@ -71,7 +109,7 @@ export function Footer() {
                 <Instagram className="w-5 h-5" />
               </a>
               <a
-                href="https://web.facebook.com/YakootSweet/?_rdc=1&_rdr#"
+                href="https://web.facebook.com/ElaslyResturant/?locale=ar_AR&_rdc=1&_rdr#"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-card/10 flex items-center justify-center hover:bg-card/20 transition-colors"
@@ -88,28 +126,36 @@ export function Footer() {
             <div className="space-y-6">
               <div className="text-card/70">
                 <p className="font-medium text-card mb-2 flex items-center gap-2">
-                  <Store className="w-4 h-4 text-primary" /> فرع بركة السبع
+                  <Store className="w-4 h-4 text-primary" /> فرع بركة السبع غرب
                 </p>
                 <p className="text-sm flex items-center gap-2 mb-1">
                   <Phone className="w-3 h-3 flex-shrink-0" /> 
-                  <span dir="ltr">048/2991500</span>
+                  <PhoneDisplay phone="01061465200" />
+                </p>
+                <p className="text-sm flex items-center gap-2 mb-1">
+                  <Phone className="w-3 h-3 flex-shrink-0" /> 
+                  <PhoneDisplay phone="01279547317" />
                 </p>
                 <p className="text-sm flex items-start gap-2">
                   <MapPin className="w-3 h-3 mt-1 flex-shrink-0" /> 
-                  شارع عبد المنعم رياض بجوار موقف مصر
+                  بركة السبع غرب - شارع جمال عبد الناصر (طريق شبين الكوم)
                 </p>
               </div>
               <div className="text-card/70">
                 <p className="font-medium text-card mb-2 flex items-center gap-2">
-                  <Store className="w-4 h-4 text-primary" /> فرع قويسنا
+                  <Store className="w-4 h-4 text-primary" /> فرع بركة السبع شرق
                 </p>
                 <p className="text-sm flex items-center gap-2 mb-1">
                   <Phone className="w-3 h-3 flex-shrink-0" /> 
-                  <span dir="ltr">048/2573777</span>
+                  <PhoneDisplay phone="0482991771" />
+                </p>
+                <p className="text-sm flex items-center gap-2 mb-1">
+                  <Phone className="w-3 h-3 flex-shrink-0" /> 
+                  <PhoneDisplay phone="01206170001" />
                 </p>
                 <p className="text-sm flex items-start gap-2">
                   <MapPin className="w-3 h-3 mt-1 flex-shrink-0" /> 
-                  شارع الجيش مقابل أبو عميرة للمشويات
+                  بركة السبع شرق - بجوار موقف مصر
                 </p>
               </div>
             </div>
@@ -121,7 +167,7 @@ export function Footer() {
             <ul className="space-y-3">
               <li>
                 <a href="#menu" onClick={(e) => scrollToSection(e, "menu")} className="text-card/70 hover:text-card transition-colors cursor-pointer">
-                  قائمة الحلويات
+                  قائمة المشويات
                 </a>
               </li>
               <li>
@@ -146,7 +192,7 @@ export function Footer() {
             <ul className="space-y-3">
               <li className="flex items-start gap-3 text-card/70">
                 <MapPin className="w-4 h-4 text-primary mt-1" />
-                <span>المنوفية، مصر</span>
+                <span>بركة السبع، المنوفية، مصر</span>
               </li>
             </ul>
           </div>
@@ -169,7 +215,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-card/10 pt-8 text-center">
           <p className="text-card/50 text-sm">
-            &copy; {new Date().getFullYear()} سلسلة متاجر حلويات ياقوت. جميع الحقوق محفوظة.
+            &copy; {new Date().getFullYear()} حاتي الأصلي. جميع الحقوق محفوظة.
           </p>
         </div>
       </div>
