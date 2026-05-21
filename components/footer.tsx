@@ -79,7 +79,7 @@ export function Footer() {
         title="واتساب"
       >
         <Send className="w-3 h-3" />
-        <span>تواصل معنا واتس</span>
+        <span>واتس</span>
       </Button>
     </div>
   )
