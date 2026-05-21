@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Phone, MapPin, Clock, Facebook, Instagram, Store, MessageCircle } from "lucide-react"
+import { Phone, MapPin, Clock, Facebook, Instagram, Store, Send } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 
@@ -61,31 +61,27 @@ export function Footer() {
   }
 
   const PhoneDisplay = ({ phone }: { phone: string }) => (
-    <>
-      {/* Desktop view */}
-      <span dir="ltr" className="hidden md:inline">{phone}</span>
-      {/* Mobile/Tablet view */}
-      <div className="md:hidden flex gap-2 items-center flex-wrap">
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-7 text-xs border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-          onClick={() => handleCall(phone)}
-        >
-          <Phone className="w-3 h-3 ml-1" />
-          اتصل
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-7 text-xs border-green-500 text-green-500 hover:bg-green-500 hover:text-white"
-          onClick={() => handleWhatsApp(phone)}
-        >
-          <MessageCircle className="w-3 h-3 ml-1" />
-          واتس
-        </Button>
-      </div>
-    </>
+    <div className="flex gap-1.5 items-center flex-wrap w-full">
+      <span dir="ltr" className="text-sm font-medium whitespace-nowrap">{phone}</span>
+      <Button
+        size="sm"
+        className="h-6 text-xs px-2 bg-blue-600 hover:bg-blue-700 text-white flex-shrink-0 gap-1"
+        onClick={() => handleCall(phone)}
+        title="اتصل الآن"
+      >
+        <Phone className="w-3 h-3" />
+        <span>اتصل بنا</span>
+      </Button>
+      <Button
+        size="sm"
+        className="h-6 text-xs px-2 bg-green-600 hover:bg-green-700 text-white flex-shrink-0 gap-1"
+        onClick={() => handleWhatsApp(phone)}
+        title="واتساب"
+      >
+        <Send className="w-3 h-3" />
+        <span>تواصل معنا واتس</span>
+      </Button>
+    </div>
   )
 
   return (
