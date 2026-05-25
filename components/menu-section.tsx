@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Image from "next/image"
+import { ArrowRight } from "lucide-react"
 import { urlForImage } from "@/sanity/lib/image"
 import { OrderButton } from "@/components/order-button"
 
@@ -46,19 +47,13 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
   return (
     <section className="py-16 px-4 sm:px-6 lg:px-8 bg-background min-h-screen">
       <div className="max-w-7xl mx-auto">
-        {categories.length > 0 && (
+        {!activeCategory && categories.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-12">
             {categories.map((category) => (
               <button
                 key={category._id}
-                onClick={() => setActiveCategory(
-                  activeCategory === category._id ? "" : category._id
-                )}
-                className={`font-display text-2xl sm:text-3xl py-6 px-6 rounded-xl text-center transition-all duration-300 border-2 cursor-pointer ${
-                  activeCategory === category._id
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "border-border text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary"
-                }`}
+                onClick={() => setActiveCategory(category._id)}
+                className="font-display text-2xl sm:text-3xl py-6 px-6 rounded-xl text-center transition-all duration-300 border-2 border-border text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary cursor-pointer"
               >
                 {category.title}
               </button>
@@ -68,6 +63,14 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
 
         {activeCategory && activeCat && (
           <>
+            <button
+              onClick={() => setActiveCategory("")}
+              className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6 cursor-pointer"
+            >
+              <ArrowRight className="w-5 h-5" />
+              العودة إلى الأقسام
+            </button>
+
             {categoryImage && (
               <div className="relative w-full h-48 sm:h-64 md:h-80 rounded-2xl overflow-hidden mb-6">
                 <Image
