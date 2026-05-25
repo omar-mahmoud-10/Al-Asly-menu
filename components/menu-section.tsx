@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { MessageCircle } from "lucide-react"
 import { urlForImage } from "@/sanity/lib/image"
+import { OrderButton } from "@/components/order-button"
 
 interface Category {
   _id: string
@@ -116,15 +116,7 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
                           <span className="font-display text-xl text-primary">{item.price} جنيه</span>
                         </td>
                         <td className="py-5 px-6 text-center">
-                          <a
-                            href={`https://wa.me/201206170001?text=${encodeURIComponent(`أود أن أطلب: ${item.name} بسعر ${item.price} جنيه`)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold px-6 py-3 rounded-xl text-base shadow-lg shadow-green-500/25 transition-all duration-200 hover:shadow-xl hover:shadow-green-500/30 hover:scale-105"
-                          >
-                            <MessageCircle className="w-5 h-5" />
-                            اطلب الآن
-                          </a>
+                          <OrderButton itemName={item.name} itemPrice={item.price} variant="table" />
                         </td>
                       </tr>
                     ))}

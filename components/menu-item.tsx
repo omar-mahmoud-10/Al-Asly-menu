@@ -1,11 +1,6 @@
-"use client"
-
-import { useState } from "react"
 import Image from "next/image"
 import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { ShoppingCart } from "lucide-react"
+import { OrderButton } from "@/components/order-button"
 
 interface MenuItemProps {
   name: string
@@ -15,75 +10,33 @@ interface MenuItemProps {
 }
 
 export function MenuItem({ name, description, price, image }: MenuItemProps) {
-  const [showBranchDialog, setShowBranchDialog] = useState(false)
-
-  const handleOrderWithBranch = (branchPhone: string, branchName: string) => {
-    const message = `أود أن أطلب: ${name} بسعر ${price} جنيه من ${branchName}`
-    const whatsappUrl = `https://wa.me/${branchPhone}?text=${encodeURIComponent(message)}`
-    window.open(whatsappUrl, '_blank')
-    setShowBranchDialog(false)
-  }
-
   return (
-    <>
-      <Card className="group overflow-hidden bg-white/5 backdrop-blur-sm border-border hover:shadow-lg hover:border-primary/30 hover:bg-white/10 transition-all duration-300 flex flex-col h-full rounded-xl">
-        <div className="relative h-48 sm:h-56 overflow-hidden">
-          {image ? (
-            <Image
-              src={image}
-              alt={name}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-500"
-            />
-          ) : (
-            <div className="w-full h-full bg-secondary flex items-center justify-center">
-              <span className="text-muted-foreground">لا توجد صورة</span>
-            </div>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-foreground/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        </div>
-        <div className="p-5 flex flex-col flex-grow">
-          <div className="flex items-start justify-between gap-4 mb-2">
-            <h3 className="font-display text-xl text-foreground">{name}</h3>
-            <span className="font-display text-xl text-primary whitespace-nowrap">
-              {price} جنيه
-            </span>
+    <Card className="group overflow-hidden bg-white/5 backdrop-blur-sm border-border hover:shadow-lg hover:border-primary/30 hover:bg-white/10 transition-all duration-300 flex flex-col h-full rounded-xl">
+      <div className="relative h-48 sm:h-56 overflow-hidden">
+        {image ? (
+          <Image
+            src={image}
+            alt={name}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+        ) : (
+          <div className="w-full h-full bg-secondary flex items-center justify-center">
+            <span className="text-muted-foreground">لا توجد صورة</span>
           </div>
-          <p className="text-muted-foreground text-sm leading-relaxed mb-4 flex-grow font-sans">{description}</p>
-          <Button
-            onClick={() => setShowBranchDialog(true)}
-            className="w-full bg-primary hover:bg-primary/80 text-primary-foreground gap-2 rounded-lg"
-            size="sm"
-          >
-            <ShoppingCart className="w-4 h-4" />
-            اطلب الآن
-          </Button>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-foreground/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      </div>
+      <div className="p-5 flex flex-col flex-grow">
+        <div className="flex items-start justify-between gap-4 mb-2">
+          <h3 className="font-display text-xl text-foreground">{name}</h3>
+          <span className="font-display text-xl text-primary whitespace-nowrap">
+            {price} جنيه
+          </span>
         </div>
-      </Card>
-
-      <Dialog open={showBranchDialog} onOpenChange={setShowBranchDialog}>
-        <DialogContent dir="rtl" className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle className="text-center font-display text-2xl">
-              اختر الفرع المطلوب
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col gap-3 py-4">
-            <Button
-              onClick={() => handleOrderWithBranch("201206170001", "فرع موقف مصر")}
-              className="w-full bg-primary hover:bg-primary/80 text-primary-foreground h-12 text-base rounded-lg"
-            >
-              فرع موقف مصر
-            </Button>
-            <Button
-              onClick={() => handleOrderWithBranch("201061465200", "فرع شبين")}
-              className="w-full bg-primary hover:bg-primary/80 text-primary-foreground h-12 text-base rounded-lg"
-            >
-             فرع موقف شبين
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        <p className="text-muted-foreground text-sm leading-relaxed mb-4 flex-grow font-sans">{description}</p>
+        <OrderButton itemName={name} itemPrice={price} />
+      </div>
+    </Card>
   )
 }

@@ -3,7 +3,8 @@ import Image from "next/image"
 import { Header } from "@/components/header"
 import { getMenuItemsByCategory, getCategories } from "@/sanity/queries"
 import { urlForImage } from "@/sanity/lib/image"
-import { ArrowRight, ShoppingCart } from "lucide-react"
+import { ArrowRight } from "lucide-react"
+import { OrderButton } from "@/components/order-button"
 
 export async function generateStaticParams() {
   const categories = await getCategories()
@@ -85,15 +86,7 @@ export default async function CategoryPage({
                       <span className="font-display text-xl text-primary">{item.price} جنيه</span>
                     </td>
                     <td className="py-5 px-6 text-center">
-                      <a
-                        href={`https://wa.me/201206170001?text=${encodeURIComponent(`أود أن أطلب: ${item.name} بسعر ${item.price} جنيه`)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 bg-primary hover:bg-primary/80 text-primary-foreground px-5 py-2.5 rounded-lg text-sm font-sans font-medium transition-colors"
-                      >
-                        <ShoppingCart className="w-4 h-4" />
-                        اطلب الآن
-                      </a>
+                      <OrderButton itemName={item.name} itemPrice={item.price} variant="table" />
                     </td>
                   </tr>
                 ))}
