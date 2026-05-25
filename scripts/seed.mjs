@@ -1,5 +1,6 @@
 import { createClient } from '@sanity/client'
-import 'dotenv/config'
+import { config } from 'dotenv'
+config({ path: '.env.local' })
 
 const client = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
@@ -11,6 +12,24 @@ const client = createClient({
 
 async function seed() {
   console.log('🌱 Seeding Sanity dataset with restaurant menu...\n')
+
+  // ── Clean up old data ──
+  console.log('  🗑️  Cleaning up old data...')
+  const oldItems = await client.fetch('*[_type == "menuItem"]._id')
+  const oldCategories = await client.fetch('*[_type == "category"]._id')
+  
+  if (oldItems.length > 0) {
+    const tx = client.transaction()
+    for (const id of oldItems) tx.delete(id)
+    await tx.commit()
+    console.log(`  🗑️  Deleted ${oldItems.length} old menu items`)
+  }
+  if (oldCategories.length > 0) {
+    const tx = client.transaction()
+    for (const id of oldCategories) tx.delete(id)
+    await tx.commit()
+    console.log(`  🗑️  Deleted ${oldCategories.length} old categories`)
+  }
 
   // ── Categories ──
   const categories = [

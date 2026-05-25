@@ -10,7 +10,7 @@ export async function generateStaticParams() {
   return categories.map((cat: { slug: string }) => ({ slug: cat.slug }))
 }
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 export default async function CategoryPage({
   params,
