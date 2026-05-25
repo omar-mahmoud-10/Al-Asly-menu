@@ -5,7 +5,15 @@ export const client = createClient({
   projectId: getProjectId(),
   dataset: getDataset(),
   apiVersion: '2024-01-01',
-  useCdn: process.env.NODE_ENV === 'production',
+  useCdn: true,
+  perspective: 'published',
+})
+
+export const writeClient = createClient({
+  projectId: getProjectId(),
+  dataset: getDataset(),
+  apiVersion: '2024-01-01',
+  useCdn: false,
   token,
   perspective: 'published',
 })

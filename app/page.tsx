@@ -1,8 +1,5 @@
 import { Header } from "@/components/header"
-import { Hero } from "@/components/hero"
 import { MenuSection } from "@/components/menu-section"
-import { AboutSection } from "@/components/about-section"
-import { Footer } from "@/components/footer"
 import { getMenuItems, getCategories } from "@/sanity/queries"
 
 export default async function Home() {
@@ -12,12 +9,9 @@ export default async function Home() {
   ])
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen bg-background">
       <Header />
-      <Hero />
       <MenuSection items={items} categories={categories} />
-      <AboutSection />
-      <Footer />
     </main>
   )
 }

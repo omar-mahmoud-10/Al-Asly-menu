@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Phone, MapPin, Clock, Facebook, Instagram, Store, Send } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -45,8 +46,8 @@ export function Footer() {
   const [isOpenHours, setIsOpenHours] = useState<boolean>(() => {
     const now = new Date()
     const time = now.getHours() + now.getMinutes() / 60
-    const start = 8 + 30 / 60 // 8:30
-    const end = 23 // 23:00
+    const start = 8 + 30 / 60
+    const end = 23
     return time >= start && time < end
   })
 
@@ -99,8 +100,8 @@ export function Footer() {
     const check = () => {
       const now = new Date()
       const time = now.getHours() + now.getMinutes() / 60
-      const start = 8 + 30 / 60 // 8:30
-      const end = 23 // 23:00
+      const start = 8 + 30 / 60
+      const end = 23
       setIsOpenHours(time >= start && time < end)
     }
 
@@ -109,131 +110,161 @@ export function Footer() {
   }, [])
 
   return (
-    <footer id="contact" className="bg-foreground text-card py-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <div id="branches" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-          {/* Brand */}
-          <div className="lg:col-span-1">
-            <h3 className="font-serif text-2xl font-bold mb-4">حاتي الأصلي</h3>
-            <p className="text-card/70 text-sm leading-relaxed mb-4">
-              أصل المشوي | كبابجي
-            </p>
-            <div className="flex gap-4">
+    <footer id="contact">
+      <div className="relative bg-card py-12 zigzag-divider-top">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
               <a
-                href="https://www.instagram.com/elasly_resturant_/"
+                href="https://www.facebook.com/ElaslyResturant/?locale=ar_AR&_rdc=1&_rdr#"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-card/10 flex items-center justify-center hover:bg-card/20 transition-colors"
-                aria-label="انستغرام"
-              >
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a
-                href="https://web.facebook.com/ElaslyResturant/?locale=ar_AR&_rdc=1&_rdr#"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-card/10 flex items-center justify-center hover:bg-card/20 transition-colors"
+                className="w-10 h-10 rounded-full border-2 border-primary/30 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300"
                 aria-label="فيسبوك"
               >
                 <Facebook className="w-5 h-5" />
               </a>
             </div>
-          </div>
 
-          {/* Branches */}
-          <div>
-            <h4 className="font-serif text-lg font-semibold mb-4">فروعنا</h4>
-            <div className="space-y-6">
-              <div className="text-card/70">
-                <p className="font-medium text-card mb-2 flex items-center gap-2">
-                  <Store className="w-4 h-4 text-primary" /> فرع بركة السبع غرب
-                </p>
-                <p className="text-sm flex items-center gap-2 mb-1">
-                  <Phone className="w-3 h-3 flex-shrink-0" /> 
-                  <PhoneDisplay phone="01061465200" />
-                </p>
-                <p className="text-sm flex items-center gap-2 mb-1">
-                  <Phone className="w-3 h-3 flex-shrink-0" /> 
-                  <PhoneDisplay phone="01279547317" />
-                </p>
-                <p className="text-sm flex items-start gap-2">
-                  <MapPin className="w-3 h-3 mt-1 flex-shrink-0" /> 
-                  بركة السبع غرب - شارع جمال عبد الناصر (طريق شبين الكوم)
-                </p>
-              </div>
-              <div className="text-card/70">
-                <p className="font-medium text-card mb-2 flex items-center gap-2">
-                  <Store className="w-4 h-4 text-primary" /> فرع بركة السبع شرق
-                </p>
-                <p className="text-sm flex items-center gap-2 mb-1">
-                  <Phone className="w-3 h-3 flex-shrink-0" /> 
-                  <PhoneDisplay phone="0482991771" />
-                </p>
-                <p className="text-sm flex items-center gap-2 mb-1">
-                  <Phone className="w-3 h-3 flex-shrink-0" /> 
-                  <PhoneDisplay phone="01206170001" />
-                </p>
-                <p className="text-sm flex items-start gap-2">
-                  <MapPin className="w-3 h-3 mt-1 flex-shrink-0" /> 
-                  بركة السبع شرق - بجوار موقف مصر
-                </p>
-              </div>
+            <Link href="/" className="flex-shrink-0">
+              <Image
+                src="/logo_metaTitle.jpg"
+                alt="حاتي الأصلي"
+                width={80}
+                height={80}
+                className="h-16 w-16 sm:h-20 sm:w-20 rounded-full object-cover border-2 border-primary/20"
+              />
+            </Link>
+
+            <div className="flex items-center gap-3">
+              <a
+                href="https://www.instagram.com/elasly_resturant_/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full border-2 border-primary/30 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300"
+                aria-label="انستغرام"
+              >
+                <Instagram className="w-5 h-5" />
+              </a>
             </div>
           </div>
-
-          {/* Quick Links */}
-          <div>
-            <h4 className="font-serif text-lg font-semibold mb-4">روابط سريعة</h4>
-            <ul className="space-y-3">
-              <li>
-                <a href="#menu" onClick={(e) => scrollToSection(e, "menu")} className="text-card/70 hover:text-card transition-colors cursor-pointer">
-                  قائمة المشويات
-                </a>
-              </li>
-              <li>
-                <a href="#about" onClick={(e) => scrollToSection(e, "about")} className="text-card/70 hover:text-card transition-colors cursor-pointer">
-                  من نحن
-                </a>
-              </li>
-              <li>
-                <button
-                  onClick={() => setShowDelivery(true)}
-                  className="text-card/70 hover:text-card transition-colors cursor-pointer"
-                >
-                  خدمة التوصيل
-                </button>
-              </li>
-            </ul>
-          </div>
-
-          {/* Hours */}
-          <div>
-            <h4 className="font-serif text-lg font-semibold mb-4">ساعات العمل</h4>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-3 text-card/70">
-                <Clock className="w-4 h-4 text-primary mt-1" />
-                <div>
-                  <p className="font-medium text-card">جميع أيام الأسبوع</p>
-                  <p>٨:٣٠ ص - ١١:٠٠ م</p>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Bottom Bar */}
-        <div className="border-t border-card/10 pt-8 text-center">
-          <p className="text-card/50 text-sm">
-            &copy; {new Date().getFullYear()} حاتي الأصلي. جميع الحقوق محفوظة.
-          </p>
         </div>
       </div>
 
-      {/* Delivery Dialog */}
+      <div className="bg-foreground text-card py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto" id="branches">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+            <div className="lg:col-span-1">
+              <h3 className="font-display text-3xl mb-4">حاتي الأصلي</h3>
+              <p className="text-card/70 text-sm leading-relaxed mb-4 font-sans">
+                أصل المشوي | كبابجي
+              </p>
+              <div className="flex gap-4">
+                <a
+                  href="https://www.instagram.com/elasly_resturant_/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-card/10 flex items-center justify-center hover:bg-card/20 transition-colors"
+                  aria-label="انستغرام"
+                >
+                  <Instagram className="w-5 h-5" />
+                </a>
+                <a
+                  href="https://web.facebook.com/ElaslyResturant/?locale=ar_AR&_rdc=1&_rdr#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-card/10 flex items-center justify-center hover:bg-card/20 transition-colors"
+                  aria-label="فيسبوك"
+                >
+                  <Facebook className="w-5 h-5" />
+                </a>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-display text-2xl mb-4">فروعنا</h4>
+              <div className="space-y-6">
+                <div className="text-card/70">
+                  <p className="font-medium text-card mb-2 flex items-center gap-2">
+                    <Store className="w-4 h-4 text-primary" /> فرع بركة السبع غرب
+                  </p>
+                  <p className="text-sm flex items-center gap-2 mb-1">
+                    <Phone className="w-3 h-3 flex-shrink-0" /> 
+                    <PhoneDisplay phone="01061465200" />
+                  </p>
+                  <p className="text-sm flex items-center gap-2 mb-1">
+                    <Phone className="w-3 h-3 flex-shrink-0" /> 
+                    <PhoneDisplay phone="01279547317" />
+                  </p>
+                  <p className="text-sm flex items-start gap-2">
+                    <MapPin className="w-3 h-3 mt-1 flex-shrink-0" /> 
+                    بركة السبع غرب - شارع جمال عبد الناصر (طريق شبين الكوم)
+                  </p>
+                </div>
+                <div className="text-card/70">
+                  <p className="font-medium text-card mb-2 flex items-center gap-2">
+                    <Store className="w-4 h-4 text-primary" /> فرع بركة السبع شرق
+                  </p>
+                  <p className="text-sm flex items-center gap-2 mb-1">
+                    <Phone className="w-3 h-3 flex-shrink-0" /> 
+                    <PhoneDisplay phone="0482991771" />
+                  </p>
+                  <p className="text-sm flex items-center gap-2 mb-1">
+                    <Phone className="w-3 h-3 flex-shrink-0" /> 
+                    <PhoneDisplay phone="01206170001" />
+                  </p>
+                  <p className="text-sm flex items-start gap-2">
+                    <MapPin className="w-3 h-3 mt-1 flex-shrink-0" /> 
+                    بركة السبع شرق - بجوار موقف مصر
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-display text-2xl mb-4">روابط سريعة</h4>
+              <ul className="space-y-3">
+                <li>
+                  <a href="#menu" onClick={(e) => scrollToSection(e, "menu")} className="text-card/70 hover:text-card transition-colors cursor-pointer font-sans">
+                    قائمة المشويات
+                  </a>
+                </li>
+                <li>
+                  <a href="#about" onClick={(e) => scrollToSection(e, "about")} className="text-card/70 hover:text-card transition-colors cursor-pointer font-sans">
+                    من نحن
+                  </a>
+                </li>
+                <li>
+                  <button
+                    onClick={() => setShowDelivery(true)}
+                    className="text-card/70 hover:text-card transition-colors cursor-pointer font-sans"
+                  >
+                    خدمة التوصيل
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-display text-2xl mb-4">ساعات العمل</h4>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3 text-card/70">
+                  <Clock className="w-4 h-4 text-primary mt-1" />
+                  <div>
+                    <p className="font-medium text-card">جميع أيام الأسبوع</p>
+                    <p className="font-sans">٨:٣٠ ص - ١١:٠٠ م</p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <Dialog open={showDelivery} onOpenChange={setShowDelivery}>
         <DialogContent dir="rtl" className="max-h-[80vh] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
           <DialogHeader>
-            <DialogTitle className="font-serif text-2xl text-center">أسعار التوصيل</DialogTitle>
+            <DialogTitle className="font-display text-3xl text-center">أسعار التوصيل</DialogTitle>
           </DialogHeader>
           <div className="mt-4 p-3 bg-primary/10 rounded-lg text-sm text-primary text-center mb-4">
             <span className="font-semibold">حجز:</span> المندوب يحجز الطلب وينتظر لحين استلام طلب إضافي ذاهب لنفس المكان، ثم ينطلق.

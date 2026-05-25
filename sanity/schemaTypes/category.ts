@@ -19,6 +19,13 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'image',
+      title: 'صورة الفئة',
+      type: 'image',
+      options: { hotspot: true },
+      description: 'صورة تظهر في أعلى يسار صفحة الفئة',
+    }),
+    defineField({
       name: 'order',
       title: 'ترتيب العرض',
       type: 'number',
