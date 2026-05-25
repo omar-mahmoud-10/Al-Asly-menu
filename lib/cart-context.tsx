@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useReducer, type ReactNode } from "react"
+import { createContext, useContext, useReducer, useState, type ReactNode } from "react"
 
 interface CartItem {
   id: string
@@ -27,6 +27,9 @@ interface CartContextValue {
   removeItem: (id: string) => void
   updateQuantity: (id: string, quantity: number) => void
   clearCart: () => void
+  cartOpen: boolean
+  openCart: () => void
+  closeCart: () => void
 }
 
 function cartReducer(state: CartState, action: CartAction): CartState {
@@ -63,6 +66,7 @@ const CartContext = createContext<CartContextValue | null>(null)
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, { items: [] })
+  const [cartOpen, setCartOpen] = useState(false)
 
   const addItem = (id: string, name: string, price: number) =>
     dispatch({ type: "ADD_ITEM", payload: { id, name, price } })
@@ -79,7 +83,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const totalPrice = state.items.reduce((sum, i) => sum + i.price * i.quantity, 0)
 
   return (
-    <CartContext.Provider value={{ items: state.items, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart }}>
+    <CartContext.Provider value={{
+      items: state.items, totalItems, totalPrice,
+      addItem, removeItem, updateQuantity, clearCart,
+      cartOpen, openCart: () => setCartOpen(true), closeCart: () => setCartOpen(false),
+    }}>
       {children}
     </CartContext.Provider>
   )

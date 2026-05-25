@@ -14,8 +14,7 @@ const branches = [
 ]
 
 export function CartSheet() {
-  const { items, totalItems, totalPrice, removeItem, updateQuantity, clearCart } = useCart()
-  const [open, setOpen] = useState(false)
+  const { items, totalItems, totalPrice, removeItem, updateQuantity, clearCart, cartOpen, closeCart } = useCart()
   const [showBranchDialog, setShowBranchDialog] = useState(false)
 
   const buildMessage = (branchName: string) => {
@@ -30,13 +29,13 @@ export function CartSheet() {
     const message = buildMessage(branchName)
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank")
     setShowBranchDialog(false)
-    setOpen(false)
+    closeCart()
     clearCart()
   }
 
   return (
     <>
-      <Sheet open={open} onOpenChange={setOpen}>
+      <Sheet open={cartOpen} onOpenChange={(o) => !o && closeCart()}>
         <SheetTrigger asChild>
           <button className="relative w-12 h-12 rounded-full border-2 border-[#2B0003]/30 flex items-center justify-center text-[#2B0003] hover:bg-[#2B0003] hover:text-white transition-all duration-300 cursor-pointer">
             <ShoppingCart className="w-5 h-5" />
@@ -103,7 +102,7 @@ export function CartSheet() {
                   className="w-full bg-primary hover:bg-primary/80 text-primary-foreground gap-2 h-12 text-base rounded-lg"
                 >
                   <MessageCircle className="w-5 h-5" />
-                  إرسال الطلب إلى واتساب
+                  إرسال الطلب إلى المطعم
                 </Button>
               </div>
             </div>
