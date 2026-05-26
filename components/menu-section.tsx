@@ -1,7 +1,6 @@
 "use client"
 
-import { useState } from "react"
-import Image from "next/image"
+import { useState, useRef } from "react"
 import { ArrowRight } from "lucide-react"
 import { urlForImage } from "@/sanity/lib/image"
 import { OrderButton } from "@/components/order-button"
@@ -64,21 +63,6 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
         {activeCategory && activeCat && (
           <>
             <div className="flex items-start gap-4 mb-6">
-              <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-xl overflow-hidden shrink-0 border border-border bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                {categoryImage ? (
-                  <Image
-                    src={categoryImage}
-                    alt={activeCat.title}
-                    fill
-                    className="object-cover"
-                    priority
-                  />
-                ) : (
-                  <span className="font-display text-3xl sm:text-4xl text-primary/40">
-                    {activeCat.title.charAt(0)}
-                  </span>
-                )}
-              </div>
               <div className="flex-1 min-w-0">
                 <button
                   onClick={() => setActiveCategory("")}
@@ -90,6 +74,29 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
                 <h2 className="font-display text-3xl sm:text-4xl text-foreground">
                   {activeCat.title}
                 </h2>
+              </div>
+              <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-xl overflow-hidden shrink-0 border border-border bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                {categoryImage ? (
+                  <img
+                    src={categoryImage}
+                    alt={activeCat.title}
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none"
+                      const parent = (e.target as HTMLImageElement).parentElement
+                      if (parent) {
+                        const span = document.createElement("span")
+                        span.className = "font-display text-3xl sm:text-4xl text-primary/40"
+                        span.textContent = activeCat.title.charAt(0)
+                        parent.appendChild(span)
+                      }
+                    }}
+                  />
+                ) : (
+                  <span className="font-display text-3xl sm:text-4xl text-primary/40">
+                    {activeCat.title.charAt(0)}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -104,7 +111,7 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
                     <tr className="bg-white/5 border-b border-border">
                       <th className="text-right py-4 px-6 font-display text-xl text-foreground">الصنف</th>
                       <th className="text-right py-4 px-6 font-display text-xl text-foreground">السعر</th>
-                      <th className="text-center py-4 px-6 font-display text-xl text-foreground w-48">الطلب</th>
+                       <th className="text-center py-4 px-6 font-display text-xl text-foreground w-80">الطلب</th>
                     </tr>
                   </thead>
                   <tbody>
