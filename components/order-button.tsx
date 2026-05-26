@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { Plus, ShoppingCart, Check, MessageCircle, Utensils, Package } from "lucide-react"
+import React, { useState, useRef } from "react"
+import { Plus, ShoppingCart, Check, MessageCircle, Utensils, Package, Bike } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useCart } from "@/lib/cart-context"
@@ -14,29 +14,140 @@ const branches = [
 const orderTypeOptions: Record<string, { id: string; name: string; icon: any }[]> = {
   "فرع موقف مصر": [
     { id: "takeaway", name: "تيك أواي", icon: Package },
+    { id: "delivery", name: "دليفرى", icon: Bike },
     { id: "dinein", name: "صالة", icon: Utensils },
   ],
   "فرع موقف شبين": [
     { id: "takeaway", name: "تيك أواي", icon: Package },
+    { id: "delivery", name: "دليفرى", icon: Bike },
   ],
 }
+
+const weightOptions = [
+  { label: "كيلو", value: 1 },
+  { label: "ثلاثة ارباع", value: 0.75 },
+  { label: "نصف", value: 0.5 },
+  { label: "ثلث", value: 0.33 },
+  { label: "ربع", value: 0.25 },
+  { label: "ثمن", value: 0.125 },
+]
 
 interface OrderButtonProps {
   itemName: string
   itemPrice: number
   variant?: "table" | "card"
+  categoryTitle?: string
 }
 
-export function OrderButton({ itemName, itemPrice, variant = "card" }: OrderButtonProps) {
+export function OrderButton({ itemName, itemPrice, variant = "card", categoryTitle }: OrderButtonProps) {
   const { items, addItem, clearCart } = useCart()
   const [showSuccess, setShowSuccess] = useState(false)
+  const [showWeightSelect, setShowWeightSelect] = useState(false)
+  const buttonRef = useRef<HTMLButtonElement | null>(null)
   const [showBranch, setShowBranch] = useState(false)
   const [showOrderType, setShowOrderType] = useState(false)
+  const [showCustomerForm, setShowCustomerForm] = useState(false)
   const [selectedBranch, setSelectedBranch] = useState<{ name: string; phone: string } | null>(null)
+  const [selectedOrderType, setSelectedOrderType] = useState<{ id: string; name: string } | null>(null)
+  const [customerName, setCustomerName] = useState("")
+  const [customerAddress, setCustomerAddress] = useState("")
+  const [customerPhone, setCustomerPhone] = useState("")
   const id = `${itemName}-${itemPrice}`
 
-  const handleAdd = () => {
+  const handleAdd = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (categoryTitle === "مشويات") {
+      buttonRef.current = e.currentTarget
+      setShowWeightSelect(true)
+      return
+    }
+
     addItem(id, itemName, itemPrice)
+    
+    // Parabolic Fly-to-cart animation
+    const buttonEl = e.currentTarget
+    const cartEl = document.getElementById("header-cart-btn")
+    if (buttonEl && cartEl) {
+      const buttonRect = buttonEl.getBoundingClientRect()
+      const cartRect = cartEl.getBoundingClientRect()
+      
+      const size = 48
+      const startX = buttonRect.left + buttonRect.width / 2 - size / 2
+      const startY = buttonRect.top + buttonRect.height / 2 - size / 2
+      const endX = cartRect.left + cartRect.width / 2 - size / 2
+      const endY = cartRect.top + cartRect.height / 2 - size / 2
+      
+      const flyX = endX - startX
+      const flyY = endY - startY
+      
+      const outerEl = document.createElement("div")
+      outerEl.className = "fixed z-[9999] pointer-events-none animate-fly-x"
+      outerEl.style.left = `${startX}px`
+      outerEl.style.top = `${startY}px`
+      outerEl.style.width = `${size}px`
+      outerEl.style.height = `${size}px`
+      outerEl.style.setProperty("--fly-x", `${flyX}px`)
+      
+      const innerEl = document.createElement("div")
+      innerEl.className = "w-full h-full rounded-full bg-gradient-to-r from-[#C19A6B] to-[#F5E6D3] text-[#2B0003] font-display font-extrabold border-2 border-white shadow-[0_0_35px_#C19A6B,0_0_15px_#C19A6B,0_6px_16px_rgba(0,0,0,0.5)] flex items-center justify-center text-[18px] animate-fly-y"
+      innerEl.style.setProperty("--fly-y", `${flyY}px`)
+      innerEl.innerHTML = "+1"
+      
+      outerEl.appendChild(innerEl)
+      document.body.appendChild(outerEl)
+      
+      outerEl.addEventListener("animationend", () => {
+        outerEl.remove()
+      })
+    }
+
+    setShowSuccess(true)
+  }
+
+  const handleWeightSelect = (weight: typeof weightOptions[0]) => {
+    setShowWeightSelect(false)
+    const finalName = `${itemName} - ${weight.label}`
+    const finalPrice = itemPrice * weight.value
+    const itemId = `${itemName}-${weight.label}-${finalPrice}`
+    addItem(itemId, finalName, finalPrice)
+
+    if (buttonRef.current) {
+      const buttonEl = buttonRef.current
+      const cartEl = document.getElementById("header-cart-btn")
+      if (buttonEl && cartEl) {
+        const buttonRect = buttonEl.getBoundingClientRect()
+        const cartRect = cartEl.getBoundingClientRect()
+        
+        const size = 48
+        const startX = buttonRect.left + buttonRect.width / 2 - size / 2
+        const startY = buttonRect.top + buttonRect.height / 2 - size / 2
+        const endX = cartRect.left + cartRect.width / 2 - size / 2
+        const endY = cartRect.top + cartRect.height / 2 - size / 2
+        
+        const flyX = endX - startX
+        const flyY = endY - startY
+        
+        const outerEl = document.createElement("div")
+        outerEl.className = "fixed z-[9999] pointer-events-none animate-fly-x"
+        outerEl.style.left = `${startX}px`
+        outerEl.style.top = `${startY}px`
+        outerEl.style.width = `${size}px`
+        outerEl.style.height = `${size}px`
+        outerEl.style.setProperty("--fly-x", `${flyX}px`)
+        
+        const innerEl = document.createElement("div")
+        innerEl.className = "w-full h-full rounded-full bg-gradient-to-r from-[#C19A6B] to-[#F5E6D3] text-[#2B0003] font-display font-extrabold border-2 border-white shadow-[0_0_35px_#C19A6B,0_0_15px_#C19A6B,0_6px_16px_rgba(0,0,0,0.5)] flex items-center justify-center text-[18px] animate-fly-y"
+        innerEl.style.setProperty("--fly-y", `${flyY}px`)
+        innerEl.innerHTML = "+1"
+        
+        outerEl.appendChild(innerEl)
+        document.body.appendChild(outerEl)
+        
+        outerEl.addEventListener("animationend", () => {
+          outerEl.remove()
+        })
+      }
+    }
+
     setShowSuccess(true)
   }
 
@@ -46,7 +157,17 @@ export function OrderButton({ itemName, itemPrice, variant = "card" }: OrderButt
     setShowOrderType(true)
   }
 
-  const handleSendOrder = (orderType: string) => {
+  const handleOrderTypeSelect = (type: { id: string; name: string }) => {
+    setSelectedOrderType(type)
+    setShowOrderType(false)
+    if (type.id === "dinein") {
+      handleSendOrder(type.name, "", "", "")
+    } else {
+      setShowCustomerForm(true)
+    }
+  }
+
+  const handleSendOrder = (orderType: string, name: string, address: string, phone: string) => {
     if (!selectedBranch) return
     const allItems = items.length > 0
       ? items.map((item, i) => `${i + 1}- ${item.name} × ${item.quantity} = ${item.price * item.quantity} جنيه`).join("\n")
@@ -54,11 +175,28 @@ export function OrderButton({ itemName, itemPrice, variant = "card" }: OrderButt
     const total = items.length > 0
       ? items.reduce((sum, i) => sum + i.price * i.quantity, 0)
       : itemPrice
-    const message = `طلب من ${selectedBranch.name} - ${orderType}\n\n${allItems}\n\nالإجمالي: ${total} جنيه`
+
+    let header = ""
+    if (orderType === "تيك أواي") {
+      header = `السلام عليكم ورحمة الله وبركاته\nعاوز أطلب استلام من ${selectedBranch.name}\nالاسم: ${name}`
+    } else if (orderType === "دليفرى") {
+      header = `السلام عليكم ورحمة الله وبركاته\nعاوز أطلب توصيل من ${selectedBranch.name}\nالاسم: ${name}\nالعنوان: ${address}\nرقم التليفون: ${phone}`
+    } else {
+      header = `السلام عليكم ورحمة الله وبركاته\nعاوز أطلب صالة من ${selectedBranch.name}`
+    }
+
+    const footer = orderType === "دليفرى" ? `\n\nالمجموع: ${total} جنيه\n\nيا ريت تقولي سعر التوصيل كام عشان أحسبه مع الفاتورة؟` : `\n\nالمجموع: ${total} جنيه`
+
+    const message = `${header}\n\nالأكل:\n${allItems}${footer}`
     window.open(`https://wa.me/${selectedBranch.phone}?text=${encodeURIComponent(message)}`, "_blank")
+    setShowCustomerForm(false)
     setShowOrderType(false)
     setShowSuccess(false)
     setSelectedBranch(null)
+    setSelectedOrderType(null)
+    setCustomerName("")
+    setCustomerAddress("")
+    setCustomerPhone("")
     clearCart()
   }
 
@@ -115,6 +253,27 @@ export function OrderButton({ itemName, itemPrice, variant = "card" }: OrderButt
         </DialogContent>
       </Dialog>
 
+      <Dialog open={showWeightSelect} onOpenChange={(o) => { setShowWeightSelect(o); if (!o) buttonRef.current = null }}>
+        <DialogContent dir="rtl" className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="text-center font-display text-2xl">اختر الوزن</DialogTitle>
+            <p className="text-center text-muted-foreground text-sm mt-1">{itemName}</p>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 py-4">
+            {weightOptions.map((weight) => (
+              <Button
+                key={weight.label}
+                onClick={() => handleWeightSelect(weight)}
+                className="w-full bg-primary hover:bg-primary/80 text-primary-foreground h-14 text-base rounded-lg flex justify-between px-6"
+              >
+                <span>{weight.label}</span>
+                <span className="opacity-80">{itemPrice * weight.value} جنيه</span>
+              </Button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={showBranch} onOpenChange={setShowBranch}>
         <DialogContent dir="rtl" className="sm:max-w-[400px]">
           <DialogHeader>
@@ -148,7 +307,7 @@ export function OrderButton({ itemName, itemPrice, variant = "card" }: OrderButt
               return (
                 <Button
                   key={type.id}
-                  onClick={() => handleSendOrder(type.name)}
+                  onClick={() => handleOrderTypeSelect(type)}
                   className="w-full bg-primary hover:bg-primary/80 text-primary-foreground h-14 text-base rounded-lg gap-3"
                 >
                   <Icon className="w-5 h-5" />
@@ -156,6 +315,75 @@ export function OrderButton({ itemName, itemPrice, variant = "card" }: OrderButt
                 </Button>
               )
             })}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showCustomerForm} onOpenChange={(o) => { setShowCustomerForm(o); if (!o) { setSelectedOrderType(null); setSelectedBranch(null) } }}>
+        <DialogContent dir="rtl" className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle className="text-center font-display text-2xl">
+              {selectedOrderType?.id === "delivery" ? "بيانات التوصيل" : "بيانات العميل"}
+            </DialogTitle>
+            {selectedBranch && selectedOrderType && (
+              <p className="text-center text-muted-foreground text-sm mt-1">
+                {selectedBranch.name} - {selectedOrderType.name}
+              </p>
+            )}
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-4">
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">الاسم</label>
+              <input
+                type="text"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="أدخل اسمك"
+                className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+            {selectedOrderType?.id === "delivery" && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">العنوان</label>
+                  <input
+                    type="text"
+                    value={customerAddress}
+                    onChange={(e) => setCustomerAddress(e.target.value)}
+                    placeholder="أدخل عنوان التوصيل"
+                    className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">رقم التواصل</label>
+                  <input
+                    type="tel"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    placeholder="أدخل رقم الهاتف"
+                    className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
+                  * سعر التوصيل منفصل عن سعر الأوردر
+                </p>
+              </>
+            )}
+            <Button
+              onClick={() => {
+                if (selectedOrderType) {
+                  handleSendOrder(selectedOrderType.name, customerName, customerAddress, customerPhone)
+                }
+              }}
+              disabled={
+                !customerName.trim() ||
+                (selectedOrderType?.id === "delivery" && (!customerAddress.trim() || !customerPhone.trim()))
+              }
+              className="w-full bg-primary hover:bg-primary/80 text-primary-foreground h-12 text-base rounded-lg mt-2"
+            >
+              <MessageCircle className="w-5 h-5" />
+              إرسال عبر واتساب
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

@@ -86,7 +86,7 @@ export default async function CategoryPage({
                       <span className="font-display text-xl text-primary">{item.price} جنيه</span>
                     </td>
                     <td className="py-5 px-6 text-center">
-                      <OrderButton itemName={item.name} itemPrice={item.price} variant="table" />
+                      <OrderButton itemName={item.name} itemPrice={item.price} variant="table" categoryTitle={category?.title} />
                     </td>
                   </tr>
                 ))}

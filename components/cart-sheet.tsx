@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { ShoppingCart, Plus, Minus, Trash2, MessageCircle } from "lucide-react"
+import { useState, useEffect } from "react"
+import { ShoppingCart, Plus, Minus, Trash2, MessageCircle, Package, Bike, Utensils } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -13,34 +13,105 @@ const branches = [
   { name: "فرع موقف شبين", phone: "201061465200" },
 ]
 
-export function CartSheet() {
-  const { items, totalItems, totalPrice, removeItem, updateQuantity, clearCart, cartOpen, closeCart } = useCart()
-  const [showBranchDialog, setShowBranchDialog] = useState(false)
+const orderTypeOptions: Record<string, { id: string; name: string; icon: any }[]> = {
+  "فرع موقف مصر": [
+    { id: "takeaway", name: "تيك أواي", icon: Package },
+    { id: "delivery", name: "دليفرى", icon: Bike },
+    { id: "dinein", name: "صالة", icon: Utensils },
+  ],
+  "فرع موقف شبين": [
+    { id: "takeaway", name: "تيك أواي", icon: Package },
+    { id: "delivery", name: "دليفرى", icon: Bike },
+  ],
+}
 
-  const buildMessage = (branchName: string) => {
+export function CartSheet() {
+  const { items, totalItems, totalPrice, removeItem, updateQuantity, clearCart, cartOpen, openCart, closeCart } = useCart()
+  const [showBranchDialog, setShowBranchDialog] = useState(false)
+  const [showOrderTypeDialog, setShowOrderTypeDialog] = useState(false)
+  const [showCustomerForm, setShowCustomerForm] = useState(false)
+  const [selectedBranch, setSelectedBranch] = useState<{ name: string; phone: string } | null>(null)
+  const [selectedOrderType, setSelectedOrderType] = useState<{ id: string; name: string } | null>(null)
+  const [customerName, setCustomerName] = useState("")
+  const [customerAddress, setCustomerAddress] = useState("")
+  const [customerPhone, setCustomerPhone] = useState("")
+  const [shouldWiggle, setShouldWiggle] = useState(false)
+
+  useEffect(() => {
+    if (totalItems > 0) {
+      setShouldWiggle(true)
+      const timer = setTimeout(() => setShouldWiggle(false), 600)
+      return () => clearTimeout(timer)
+    }
+  }, [totalItems])
+
+  const buildMessage = (branchName: string, orderType: string, name: string, address: string, phone: string) => {
     const lines = items.map(
       (item, i) => `${i + 1}- ${item.name} × ${item.quantity} = ${item.price * item.quantity} جنيه`
     )
-    const total = `الإجمالي: ${totalPrice} جنيه`
-    return `طلب من ${branchName}\n\n${lines.join("\n")}\n\n${total}`
+    const total = `المجموع: ${totalPrice} جنيه`
+
+    let header = ""
+    if (orderType === "تيك أواي") {
+      header = `السلام عليكم ورحمة الله وبركاته\nعاوز أطلب استلام من ${branchName}\nالاسم: ${name}`
+    } else if (orderType === "دليفرى") {
+      header = `السلام عليكم ورحمة الله وبركاته\nعاوز أطلب توصيل من ${branchName}\nالاسم: ${name}\nالعنوان: ${address}\nرقم التليفون: ${phone}`
+    } else {
+      header = `السلام عليكم ورحمة الله وبركاته\nعاوز أطلب صالة من ${branchName}`
+    }
+
+    const footer = orderType === "دليفرى" ? `\n\n${total}\n\nيا ريت تقولي سعر التوصيل كام عشان أحسبه مع الفاتورة؟` : `\n\n${total}`
+
+    return `${header}\n\nالأكل:\n${lines.join("\n")}${footer}`
   }
 
-  const handleSendOrder = (phone: string, branchName: string) => {
-    const message = buildMessage(branchName)
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank")
+  const handleBranchSelect = (branch: { name: string; phone: string }) => {
+    setSelectedBranch(branch)
+    setShowBranchDialog(false)
+    setShowOrderTypeDialog(true)
+  }
+
+  const handleOrderTypeSelect = (type: { id: string; name: string }) => {
+    setSelectedOrderType(type)
+    setShowOrderTypeDialog(false)
+    if (type.id === "dinein") {
+      handleSendOrder(type.name, "", "", "")
+    } else {
+      setShowCustomerForm(true)
+    }
+  }
+
+  const handleSendOrder = (orderType: string, name: string, address: string, phone: string) => {
+    if (!selectedBranch) return
+    const message = buildMessage(selectedBranch.name, orderType, name, address, phone)
+    window.open(`https://wa.me/${selectedBranch.phone}?text=${encodeURIComponent(message)}`, "_blank")
+    setShowCustomerForm(false)
+    setShowOrderTypeDialog(false)
     setShowBranchDialog(false)
     closeCart()
+    setSelectedBranch(null)
+    setSelectedOrderType(null)
+    setCustomerName("")
+    setCustomerAddress("")
+    setCustomerPhone("")
     clearCart()
   }
 
   return (
     <>
-      <Sheet open={cartOpen} onOpenChange={(o) => !o && closeCart()}>
+      <Sheet open={cartOpen} onOpenChange={(o) => (o ? openCart() : closeCart())}>
         <SheetTrigger asChild>
-          <button className="relative w-12 h-12 rounded-full border-2 border-[#2B0003]/30 flex items-center justify-center text-[#2B0003] hover:bg-[#2B0003] hover:text-white transition-all duration-300 cursor-pointer">
-            <ShoppingCart className="w-5 h-5" />
+          <button
+            id="header-cart-btn"
+            className={`relative w-16 h-16 rounded-full border-2 border-[#2B0003]/30 flex items-center justify-center text-[#2B0003] hover:bg-[#2B0003] hover:text-white transition-all duration-300 cursor-pointer ${
+              shouldWiggle ? "animate-cart-bounce" : ""
+            }`}
+          >
+            <ShoppingCart className="w-7 h-7" />
             {totalItems > 0 && (
-              <Badge className="absolute -top-1.5 -right-1.5 h-5 min-w-5 px-1 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[11px] font-bold">
+              <Badge className={`absolute -top-1 -right-1 h-6 min-w-6 px-1.5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[12px] font-extrabold shadow-md border-2 border-white ${
+                shouldWiggle ? "animate-badge-pop" : ""
+              }`}>
                 {totalItems}
               </Badge>
             )}
@@ -92,7 +163,7 @@ export function CartSheet() {
                 ))}
               </div>
 
-              <div className="border-t border-border pt-4 space-y-3">
+              <div className="border-t border-border pt-4 pb-6 space-y-3">
                 <div className="flex justify-between items-center px-1">
                   <span className="font-sans text-foreground">الإجمالي</span>
                   <span className="font-display text-xl text-primary">{totalPrice} جنيه</span>
@@ -119,12 +190,107 @@ export function CartSheet() {
             {branches.map((branch) => (
               <Button
                 key={branch.phone}
-                onClick={() => handleSendOrder(branch.phone, branch.name)}
+                onClick={() => handleBranchSelect(branch)}
                 className="w-full bg-primary hover:bg-primary/80 text-primary-foreground h-12 text-base rounded-lg"
               >
                 {branch.name}
               </Button>
             ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showOrderTypeDialog} onOpenChange={(o) => { setShowOrderTypeDialog(o); if (!o) setSelectedBranch(null) }}>
+        <DialogContent dir="rtl" className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="text-center font-display text-2xl">اختر نوع الطلب</DialogTitle>
+            {selectedBranch && (
+              <p className="text-center text-muted-foreground text-sm mt-1">{selectedBranch.name}</p>
+            )}
+          </DialogHeader>
+          <div className="flex flex-col gap-3 py-4">
+            {(selectedBranch ? orderTypeOptions[selectedBranch.name] : []).map((type) => {
+              const Icon = type.icon
+              return (
+                <Button
+                  key={type.id}
+                  onClick={() => handleOrderTypeSelect(type)}
+                  className="w-full bg-primary hover:bg-primary/80 text-primary-foreground h-14 text-base rounded-lg gap-3"
+                >
+                  <Icon className="w-5 h-5" />
+                  {type.name}
+                </Button>
+              )
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showCustomerForm} onOpenChange={(o) => { setShowCustomerForm(o); if (!o) { setSelectedOrderType(null); setSelectedBranch(null) } }}>
+        <DialogContent dir="rtl" className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle className="text-center font-display text-2xl">
+              {selectedOrderType?.id === "delivery" ? "بيانات التوصيل" : "بيانات العميل"}
+            </DialogTitle>
+            {selectedBranch && selectedOrderType && (
+              <p className="text-center text-muted-foreground text-sm mt-1">
+                {selectedBranch.name} - {selectedOrderType.name}
+              </p>
+            )}
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-4">
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">الاسم</label>
+              <input
+                type="text"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="أدخل اسمك"
+                className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+            {selectedOrderType?.id === "delivery" && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">العنوان</label>
+                  <input
+                    type="text"
+                    value={customerAddress}
+                    onChange={(e) => setCustomerAddress(e.target.value)}
+                    placeholder="أدخل عنوان التوصيل"
+                    className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">رقم التواصل</label>
+                  <input
+                    type="tel"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    placeholder="أدخل رقم الهاتف"
+                    className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
+                  * سعر التوصيل منفصل عن سعر الأوردر
+                </p>
+              </>
+            )}
+            <Button
+              onClick={() => {
+                if (selectedOrderType) {
+                  handleSendOrder(selectedOrderType.name, customerName, customerAddress, customerPhone)
+                }
+              }}
+              disabled={
+                !customerName.trim() ||
+                (selectedOrderType?.id === "delivery" && (!customerAddress.trim() || !customerPhone.trim()))
+              }
+              className="w-full bg-primary hover:bg-primary/80 text-primary-foreground h-12 text-base rounded-lg mt-2"
+            >
+              <MessageCircle className="w-5 h-5" />
+              إرسال عبر واتساب
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

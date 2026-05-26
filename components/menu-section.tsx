@@ -65,7 +65,7 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
           <>
             <button
               onClick={() => setActiveCategory("")}
-              className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6 cursor-pointer"
+              className="inline-flex items-center gap-2 text-primary border border-primary/30 hover:bg-primary/10 bg-primary/5 px-4 py-2 rounded-full transition-colors mb-6 cursor-pointer font-medium"
             >
               <ArrowRight className="w-5 h-5" />
               العودة إلى الأقسام
@@ -119,7 +119,7 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
                           <span className="font-display text-xl text-primary">{item.price} جنيه</span>
                         </td>
                         <td className="py-5 px-6 text-center">
-                          <OrderButton itemName={item.name} itemPrice={item.price} variant="table" />
+                          <OrderButton itemName={item.name} itemPrice={item.price} variant="table" categoryTitle={activeCat.title} />
                         </td>
                       </tr>
                     ))}
