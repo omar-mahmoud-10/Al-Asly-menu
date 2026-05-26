@@ -101,6 +101,7 @@ export function OrderButton({ itemName, itemPrice, variant = "card", categoryTit
     }
 
     setShowSuccess(true)
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   const handleWeightSelect = (weight: typeof weightOptions[0]) => {
@@ -149,6 +150,7 @@ export function OrderButton({ itemName, itemPrice, variant = "card", categoryTit
     }
 
     setShowSuccess(true)
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   const handleBranchSelect = (branch: { name: string; phone: string }) => {

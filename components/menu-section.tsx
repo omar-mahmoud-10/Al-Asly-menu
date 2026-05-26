@@ -63,29 +63,35 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
 
         {activeCategory && activeCat && (
           <>
-            <button
-              onClick={() => setActiveCategory("")}
-              className="inline-flex items-center gap-2 text-primary border border-primary/30 hover:bg-primary/10 bg-primary/5 px-4 py-2 rounded-full transition-colors mb-6 cursor-pointer font-medium"
-            >
-              <ArrowRight className="w-5 h-5" />
-              العودة إلى الأقسام
-            </button>
-
-            {categoryImage && (
-              <div className="relative w-full h-48 sm:h-64 md:h-80 rounded-2xl overflow-hidden mb-6">
-                <Image
-                  src={categoryImage}
-                  alt={activeCat.title}
-                  fill
-                  className="object-cover"
-                  priority
-                />
+            <div className="flex items-start gap-4 mb-6">
+              <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-xl overflow-hidden shrink-0 border border-border bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                {categoryImage ? (
+                  <Image
+                    src={categoryImage}
+                    alt={activeCat.title}
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+                ) : (
+                  <span className="font-display text-3xl sm:text-4xl text-primary/40">
+                    {activeCat.title.charAt(0)}
+                  </span>
+                )}
               </div>
-            )}
-
-            <h2 className="font-display text-4xl text-foreground mb-6 text-right">
-              {activeCat.title}
-            </h2>
+              <div className="flex-1 min-w-0">
+                <button
+                  onClick={() => setActiveCategory("")}
+                  className="inline-flex items-center gap-2 text-primary border border-primary/30 hover:bg-primary/10 bg-primary/5 px-4 py-2 rounded-full transition-colors mb-3 cursor-pointer font-medium text-sm"
+                >
+                  <ArrowRight className="w-4 h-4" />
+                  العودة إلى الأقسام
+                </button>
+                <h2 className="font-display text-3xl sm:text-4xl text-foreground">
+                  {activeCat.title}
+                </h2>
+              </div>
+            </div>
 
             {filteredItems.length === 0 ? (
               <p className="text-center text-muted-foreground text-lg py-12">

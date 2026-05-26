@@ -30,29 +30,35 @@ export default async function CategoryPage({
     <main className="min-h-screen bg-background">
       <Header />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mb-8"
-        >
-          <ArrowRight className="w-5 h-5" />
-          العودة إلى الرئيسية
-        </Link>
-
-        {categoryImage && (
-          <div className="relative w-full h-48 sm:h-64 md:h-80 rounded-2xl overflow-hidden mb-8">
-            <Image
-              src={categoryImage}
-              alt={category?.title || slug}
-              fill
-              className="object-cover"
-              priority
-            />
+        <div className="flex items-start gap-4 mb-8">
+          <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-xl overflow-hidden shrink-0 border border-border bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+            {categoryImage ? (
+              <Image
+                src={categoryImage}
+                alt={category?.title || slug}
+                fill
+                className="object-cover"
+                priority
+              />
+            ) : (
+              <span className="font-display text-3xl sm:text-4xl text-primary/40">
+                {(category?.title || slug).charAt(0)}
+              </span>
+            )}
           </div>
-        )}
-
-        <h1 className="font-display text-4xl sm:text-5xl md:text-6xl text-foreground mb-10 text-right">
-          {category?.title || slug}
-        </h1>
+          <div className="flex-1 min-w-0">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mb-3"
+            >
+              <ArrowRight className="w-4 h-4" />
+              العودة إلى الرئيسية
+            </Link>
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl text-foreground">
+              {category?.title || slug}
+            </h1>
+          </div>
+        </div>
 
         {items.length === 0 ? (
           <p className="text-center text-muted-foreground text-lg py-12">
