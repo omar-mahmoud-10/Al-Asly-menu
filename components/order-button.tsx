@@ -256,10 +256,10 @@ export function OrderButton({ itemName, itemPrice, variant = "card", categoryTit
         <button
           key={weight.label}
           onClick={(e) => addWeightDirectly(e, weight)}
-          className="inline-flex flex-col items-center gap-0.5 border border-primary/40 text-primary hover:bg-primary hover:text-primary-foreground px-2.5 py-1.5 rounded-md text-xs font-sans font-medium transition-colors cursor-pointer min-w-[48px]"
+          className="inline-flex flex-col items-center gap-1 border-2 border-primary/40 text-primary hover:bg-primary hover:text-primary-foreground px-3 py-2 rounded-lg text-sm font-sans font-semibold transition-colors cursor-pointer min-w-[60px]"
         >
           <span className="whitespace-nowrap">{weight.label}</span>
-          <span className="text-[10px] opacity-75">{Math.round(itemPrice * weight.value)}</span>
+          <span className="text-[11px] opacity-80">{Math.round(itemPrice * weight.value)} جنيه</span>
         </button>
       ))}
     </div>
