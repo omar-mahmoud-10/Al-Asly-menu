@@ -75,29 +75,15 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
                   {activeCat.title}
                 </h2>
               </div>
-              <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-xl overflow-hidden shrink-0 border border-border bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                {categoryImage ? (
+              {categoryImage && (
+                <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-xl overflow-hidden shrink-0 border border-border bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
                   <img
                     src={categoryImage}
                     alt={activeCat.title}
                     className="w-full h-full object-contain"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none"
-                      const parent = (e.target as HTMLImageElement).parentElement
-                      if (parent) {
-                        const span = document.createElement("span")
-                        span.className = "font-display text-3xl sm:text-4xl text-primary/40"
-                        span.textContent = activeCat.title.charAt(0)
-                        parent.appendChild(span)
-                      }
-                    }}
                   />
-                ) : (
-                  <span className="font-display text-3xl sm:text-4xl text-primary/40">
-                    {activeCat.title.charAt(0)}
-                  </span>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
             {filteredItems.length === 0 ? (

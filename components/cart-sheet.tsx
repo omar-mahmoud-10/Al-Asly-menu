@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 
 const branches = [
   { name: "فرع موقف مصر", phone: "201206170001" },
-  { name: "فرع موقف شبين", phone: "201061465200" },
+  { name: "فرع شبين الكرم", phone: "201061465200" },
 ]
 
 const orderTypeOptions: Record<string, { id: string; name: string; icon: any }[]> = {
@@ -19,7 +19,7 @@ const orderTypeOptions: Record<string, { id: string; name: string; icon: any }[]
     { id: "delivery", name: "دليفرى", icon: Bike },
     { id: "dinein", name: "صالة", icon: Utensils },
   ],
-  "فرع موقف شبين": [
+  "فرع شبين الكرم": [
     { id: "takeaway", name: "تيك أواي", icon: Package },
     { id: "delivery", name: "دليفرى", icon: Bike },
   ],
