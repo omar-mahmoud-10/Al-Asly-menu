@@ -68,27 +68,74 @@ export default async function CategoryPage({
                 </tr>
               </thead>
               <tbody>
-                {items.map((item: any, idx: number) => (
-                  <tr
-                    key={item._id}
-                    className={`border-b border-border transition-colors hover:bg-white/5 ${
-                      idx === items.length - 1 ? "border-b-0" : ""
-                    }`}
-                  >
-                    <td className="py-5 px-6">
-                      <span className="font-sans text-lg text-foreground">{item.name}</span>
-                      {item.description && (
-                        <p className="text-sm text-muted-foreground mt-1 font-sans">{item.description}</p>
-                      )}
-                    </td>
-                    <td className="py-5 px-6">
-                      <span className="font-display text-xl text-primary">{item.price} جنيه</span>
-                    </td>
-                    <td className="py-5 px-6 text-center">
-                      <OrderButton itemName={item.name} itemPrice={item.price} variant="table" categoryTitle={category?.title} />
-                    </td>
-                  </tr>
-                ))}
+                {(() => {
+                  const grouped: Record<string, any[]> = {}
+                  const ungrouped: any[] = []
+                  for (const item of items) {
+                    if (item.group) {
+                      if (!grouped[item.group]) grouped[item.group] = []
+                      grouped[item.group].push(item)
+                    } else {
+                      ungrouped.push(item)
+                    }
+                  }
+                  const rows: any[] = []
+                  let rowIndex = 0
+                  const totalRows = ungrouped.length + Object.keys(grouped).length
+
+                  for (const item of ungrouped) {
+                    const isLast = rowIndex === totalRows - 1
+                    rows.push(
+                      <tr key={item._id} className={`border-b border-border transition-colors hover:bg-white/5 ${isLast ? 'border-b-0' : ''}`}>
+                        <td className="py-5 px-6">
+                          <span className="font-sans text-lg text-foreground">{item.name}</span>
+                          {item.description && (
+                            <p className="text-sm text-muted-foreground mt-1 font-sans">{item.description}</p>
+                          )}
+                        </td>
+                        <td className="py-5 px-6">
+                          <span className="font-display text-xl text-primary">{item.price} جنيه</span>
+                        </td>
+                        <td className="py-5 px-6 text-center">
+                          <OrderButton itemName={item.name} itemPrice={item.price} variant="table" />
+                        </td>
+                      </tr>
+                    )
+                    rowIndex++
+                  }
+
+                  for (const [groupName, groupItems] of Object.entries(grouped)) {
+                    rows.push(
+                      <tr key={`group-${groupName}`} className="bg-primary/5 border-b border-border">
+                        <td colSpan={3} className="py-3 px-6">
+                          <span className="font-display text-lg text-primary">{groupName}</span>
+                        </td>
+                      </tr>
+                    )
+                    rowIndex++
+                    for (const item of groupItems) {
+                      const isLast = rowIndex >= totalRows - 1
+                      rows.push(
+                        <tr key={item._id} className={`border-b border-border transition-colors hover:bg-white/5 ${isLast ? 'border-b-0' : ''}`}>
+                          <td className="py-5 px-6 pr-12">
+                            <span className="font-sans text-lg text-foreground">{item.name}</span>
+                            {item.description && (
+                              <p className="text-sm text-muted-foreground mt-1 font-sans">{item.description}</p>
+                            )}
+                          </td>
+                          <td className="py-5 px-6">
+                            <span className="font-display text-xl text-primary">{item.price} جنيه</span>
+                          </td>
+                          <td className="py-5 px-6 text-center">
+                            <OrderButton itemName={item.name} itemPrice={item.price} variant="table" />
+                          </td>
+                        </tr>
+                      )
+                      rowIndex++
+                    }
+                  }
+                  return rows
+                })()}
               </tbody>
             </table>
           </div>

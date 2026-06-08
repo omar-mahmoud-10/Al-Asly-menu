@@ -186,7 +186,7 @@ export function Footer() {
               <div className="space-y-6">
                 <div className="text-card/70">
                   <p className="font-medium text-card mb-2 flex items-center gap-2">
-                    <Store className="w-4 h-4 text-primary" /> فرع شبين الكرم
+                    <Store className="w-4 h-4 text-primary" /> فرع شبين الكوم
                   </p>
                   <p className="text-sm flex items-center gap-2 mb-1">
                     <Phone className="w-3 h-3 flex-shrink-0" /> 
@@ -202,7 +202,7 @@ export function Footer() {
                   </p>
                   <p className="text-sm flex items-start gap-2">
                     <MapPin className="w-3 h-3 mt-1 flex-shrink-0" /> 
-                    بركة السبع غرب - شارع جمال عبدالناصر (طريق شبين الكرم)
+                    بركة السبع غرب - شارع جمال عبدالناصر (طريق شبين الكوم)
                   </p>
                 </div>
                 <div className="text-card/70">

@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 
 const branches = [
   { name: "فرع موقف مصر", phone: "201206170001" },
-  { name: "فرع شبين الكرم", phone: "201061465200" },
+  { name: "فرع شبين الكوم", phone: "201061465200" },
 ]
 
 const orderTypeOptions: Record<string, { id: string; name: string; icon: any }[]> = {
@@ -19,7 +19,7 @@ const orderTypeOptions: Record<string, { id: string; name: string; icon: any }[]
     { id: "delivery", name: "دليفرى", icon: Bike },
     { id: "dinein", name: "صالة", icon: Utensils },
   ],
-  "فرع شبين الكرم": [
+  "فرع شبين الكوم": [
     { id: "takeaway", name: "تيك أواي", icon: Package },
     { id: "delivery", name: "دليفرى", icon: Bike },
   ],
@@ -62,7 +62,7 @@ export function CartSheet() {
 
     const footer = orderType === "دليفرى" ? `\n\n${total}\n\nيا ريت تقولي سعر التوصيل كام عشان أحسبه مع الفاتورة؟` : `\n\n${total}`
 
-    return `${header}\n\nالأكل:\n${lines.join("\n")}${footer}`
+    return `${header}\n\nالأوردر:\n${lines.join("\n")}${footer}`
   }
 
   const handleBranchSelect = (branch: { name: string; phone: string }) => {

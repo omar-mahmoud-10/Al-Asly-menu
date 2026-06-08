@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useRef } from "react"
+import React, { useState } from "react"
 import { Plus, ShoppingCart, Check, MessageCircle, Utensils, Package, Bike } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -8,7 +8,7 @@ import { useCart } from "@/lib/cart-context"
 
 const branches = [
   { name: "فرع موقف مصر", phone: "201206170001" },
-  { name: "فرع شبين الكرم", phone: "201061465200" },
+  { name: "فرع شبين الكوم", phone: "201061465200" },
 ]
 
 const orderTypeOptions: Record<string, { id: string; name: string; icon: any }[]> = {
@@ -17,33 +17,21 @@ const orderTypeOptions: Record<string, { id: string; name: string; icon: any }[]
     { id: "delivery", name: "دليفرى", icon: Bike },
     { id: "dinein", name: "صالة", icon: Utensils },
   ],
-  "فرع شبين الكرم": [
+  "فرع شبين الكوم": [
     { id: "takeaway", name: "تيك أواي", icon: Package },
     { id: "delivery", name: "دليفرى", icon: Bike },
   ],
 }
 
-const weightOptions = [
-  { label: "كيلو", value: 1 },
-  { label: "ثلاثة ارباع", value: 0.75 },
-  { label: "نصف", value: 0.5 },
-  { label: "ثلث", value: 0.33 },
-  { label: "ربع", value: 0.25 },
-  { label: "ثمن", value: 0.125 },
-]
-
 interface OrderButtonProps {
   itemName: string
   itemPrice: number
   variant?: "table" | "card"
-  categoryTitle?: string
 }
 
-export function OrderButton({ itemName, itemPrice, variant = "card", categoryTitle }: OrderButtonProps) {
+export function OrderButton({ itemName, itemPrice, variant = "card" }: OrderButtonProps) {
   const { items, addItem, clearCart } = useCart()
   const [showSuccess, setShowSuccess] = useState(false)
-  const [showWeightSelect, setShowWeightSelect] = useState(false)
-  const buttonRef = useRef<HTMLButtonElement | null>(null)
   const [showBranch, setShowBranch] = useState(false)
   const [showOrderType, setShowOrderType] = useState(false)
   const [showCustomerForm, setShowCustomerForm] = useState(false)
@@ -55,30 +43,23 @@ export function OrderButton({ itemName, itemPrice, variant = "card", categoryTit
   const id = `${itemName}-${itemPrice}`
 
   const handleAdd = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (categoryTitle?.includes("مشويات")) {
-      buttonRef.current = e.currentTarget
-      setShowWeightSelect(true)
-      return
-    }
-
     addItem(id, itemName, itemPrice)
-    
-    // Parabolic Fly-to-cart animation
+
     const buttonEl = e.currentTarget
     const cartEl = document.getElementById("header-cart-btn")
     if (buttonEl && cartEl) {
       const buttonRect = buttonEl.getBoundingClientRect()
       const cartRect = cartEl.getBoundingClientRect()
-      
+
       const size = 48
       const startX = buttonRect.left + buttonRect.width / 2 - size / 2
       const startY = buttonRect.top + buttonRect.height / 2 - size / 2
       const endX = cartRect.left + cartRect.width / 2 - size / 2
       const endY = cartRect.top + cartRect.height / 2 - size / 2
-      
+
       const flyX = endX - startX
       const flyY = endY - startY
-      
+
       const outerEl = document.createElement("div")
       outerEl.className = "fixed z-[9999] pointer-events-none animate-fly-x"
       outerEl.style.left = `${startX}px`
@@ -86,67 +67,18 @@ export function OrderButton({ itemName, itemPrice, variant = "card", categoryTit
       outerEl.style.width = `${size}px`
       outerEl.style.height = `${size}px`
       outerEl.style.setProperty("--fly-x", `${flyX}px`)
-      
+
       const innerEl = document.createElement("div")
       innerEl.className = "w-full h-full rounded-full bg-gradient-to-r from-[#C19A6B] to-[#F5E6D3] text-[#2B0003] font-display font-extrabold border-2 border-white shadow-[0_0_35px_#C19A6B,0_0_15px_#C19A6B,0_6px_16px_rgba(0,0,0,0.5)] flex items-center justify-center text-[18px] animate-fly-y"
       innerEl.style.setProperty("--fly-y", `${flyY}px`)
       innerEl.innerHTML = "+1"
-      
+
       outerEl.appendChild(innerEl)
       document.body.appendChild(outerEl)
-      
+
       outerEl.addEventListener("animationend", () => {
         outerEl.remove()
       })
-    }
-
-    setShowSuccess(true)
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }
-
-  const handleWeightSelect = (weight: typeof weightOptions[0]) => {
-    setShowWeightSelect(false)
-    const finalName = `${itemName} - ${weight.label}`
-    const finalPrice = itemPrice * weight.value
-    const itemId = `${itemName}-${weight.label}-${finalPrice}`
-    addItem(itemId, finalName, finalPrice)
-
-    if (buttonRef.current) {
-      const buttonEl = buttonRef.current
-      const cartEl = document.getElementById("header-cart-btn")
-      if (buttonEl && cartEl) {
-        const buttonRect = buttonEl.getBoundingClientRect()
-        const cartRect = cartEl.getBoundingClientRect()
-        
-        const size = 48
-        const startX = buttonRect.left + buttonRect.width / 2 - size / 2
-        const startY = buttonRect.top + buttonRect.height / 2 - size / 2
-        const endX = cartRect.left + cartRect.width / 2 - size / 2
-        const endY = cartRect.top + cartRect.height / 2 - size / 2
-        
-        const flyX = endX - startX
-        const flyY = endY - startY
-        
-        const outerEl = document.createElement("div")
-        outerEl.className = "fixed z-[9999] pointer-events-none animate-fly-x"
-        outerEl.style.left = `${startX}px`
-        outerEl.style.top = `${startY}px`
-        outerEl.style.width = `${size}px`
-        outerEl.style.height = `${size}px`
-        outerEl.style.setProperty("--fly-x", `${flyX}px`)
-        
-        const innerEl = document.createElement("div")
-        innerEl.className = "w-full h-full rounded-full bg-gradient-to-r from-[#C19A6B] to-[#F5E6D3] text-[#2B0003] font-display font-extrabold border-2 border-white shadow-[0_0_35px_#C19A6B,0_0_15px_#C19A6B,0_6px_16px_rgba(0,0,0,0.5)] flex items-center justify-center text-[18px] animate-fly-y"
-        innerEl.style.setProperty("--fly-y", `${flyY}px`)
-        innerEl.innerHTML = "+1"
-        
-        outerEl.appendChild(innerEl)
-        document.body.appendChild(outerEl)
-        
-        outerEl.addEventListener("animationend", () => {
-          outerEl.remove()
-        })
-      }
     }
 
     setShowSuccess(true)
@@ -172,24 +104,26 @@ export function OrderButton({ itemName, itemPrice, variant = "card", categoryTit
   const handleSendOrder = (orderType: string, name: string, address: string, phone: string) => {
     if (!selectedBranch) return
     const allItems = items.length > 0
-      ? items.map((item, i) => `${i + 1}- ${item.name} × ${item.quantity} = ${item.price * item.quantity} جنيه`).join("\n")
-      : `1- ${itemName} × 1 = ${itemPrice} جنيه`
+      ? items.map((item) => `${item.quantity} ${item.name}`).join("\n")
+      : `1 ${itemName}`
     const total = items.length > 0
       ? items.reduce((sum, i) => sum + i.price * i.quantity, 0)
       : itemPrice
 
     let header = ""
+    let footer = ""
     if (orderType === "تيك أواي") {
-      header = `السلام عليكم ورحمة الله وبركاته\nعاوز أطلب استلام من ${selectedBranch.name}\nالاسم: ${name}`
+      header = `السلام عليكم ورحمة الله وبركاته،\nعاوز أطلب استلام من ${selectedBranch.name}\nالاسم: ${name}`
+      footer = `\n\nالمجموع: ${total} جنيه\nيا ريت تأكديلي سعر الأوردر كام؟`
     } else if (orderType === "دليفرى") {
-      header = `السلام عليكم ورحمة الله وبركاته\nعاوز أطلب توصيل من ${selectedBranch.name}\nالاسم: ${name}\nالعنوان: ${address}\nرقم التليفون: ${phone}`
+      header = `السلام عليكم ورحمة الله وبركاته،\nعاوز أطلب توصيل من ${selectedBranch.name}\nالاسم: ${name}\nالعنوان: ${address}\nرقم التليفون: ${phone}`
+      footer = `\n\nالمجموع: ${total} جنيه\nيا ريت تأكديلي سعر الأوردر كام وسعر التوصيل كام؟`
     } else {
-      header = `السلام عليكم ورحمة الله وبركاته\nعاوز أطلب صالة من ${selectedBranch.name}`
+      header = `السلام عليكم ورحمة الله وبركاته،\nعاوز أطلب صالة من ${selectedBranch.name}`
+      footer = `\n\nالمجموع: ${total} جنيه\nيا ريت تأكديلي سعر الأوردر كام؟`
     }
 
-    const footer = orderType === "دليفرى" ? `\n\nالمجموع: ${total} جنيه\n\nيا ريت تقولي سعر التوصيل كام عشان أحسبه مع الفاتورة؟` : `\n\nالمجموع: ${total} جنيه`
-
-    const message = `${header}\n\nالأكل:\n${allItems}${footer}`
+    const message = `${header}\n\nالطلب:\n${allItems}${footer}`
     window.open(`https://wa.me/${selectedBranch.phone}?text=${encodeURIComponent(message)}`, "_blank")
     setShowCustomerForm(false)
     setShowOrderType(false)
@@ -202,68 +136,7 @@ export function OrderButton({ itemName, itemPrice, variant = "card", categoryTit
     clearCart()
   }
 
-  const isGrills = categoryTitle?.includes("مشويات")
-
-  const addWeightDirectly = (e: React.MouseEvent<HTMLButtonElement>, weight: typeof weightOptions[0]) => {
-    const finalName = `${itemName} - ${weight.label}`
-    const finalPrice = Math.round(itemPrice * weight.value)
-    const itemId = `${itemName}-${weight.label}-${finalPrice}`
-    addItem(itemId, finalName, finalPrice)
-
-    const buttonEl = e.currentTarget
-    const cartEl = document.getElementById("header-cart-btn")
-    if (buttonEl && cartEl) {
-      const buttonRect = buttonEl.getBoundingClientRect()
-      const cartRect = cartEl.getBoundingClientRect()
-      
-      const size = 48
-      const startX = buttonRect.left + buttonRect.width / 2 - size / 2
-      const startY = buttonRect.top + buttonRect.height / 2 - size / 2
-      const endX = cartRect.left + cartRect.width / 2 - size / 2
-      const endY = cartRect.top + cartRect.height / 2 - size / 2
-      
-      const flyX = endX - startX
-      const flyY = endY - startY
-      
-      const outerEl = document.createElement("div")
-      outerEl.className = "fixed z-[9999] pointer-events-none animate-fly-x"
-      outerEl.style.left = `${startX}px`
-      outerEl.style.top = `${startY}px`
-      outerEl.style.width = `${size}px`
-      outerEl.style.height = `${size}px`
-      outerEl.style.setProperty("--fly-x", `${flyX}px`)
-      
-      const innerEl = document.createElement("div")
-      innerEl.className = "w-full h-full rounded-full bg-gradient-to-r from-[#C19A6B] to-[#F5E6D3] text-[#2B0003] font-display font-extrabold border-2 border-white shadow-[0_0_35px_#C19A6B,0_0_15px_#C19A6B,0_6px_16px_rgba(0,0,0,0.5)] flex items-center justify-center text-[18px] animate-fly-y"
-      innerEl.style.setProperty("--fly-y", `${flyY}px`)
-      innerEl.innerHTML = "+1"
-      
-      outerEl.appendChild(innerEl)
-      document.body.appendChild(outerEl)
-      
-      outerEl.addEventListener("animationend", () => {
-        outerEl.remove()
-      })
-    }
-
-    setShowSuccess(true)
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }
-
-  const button = variant === "table" && isGrills ? (
-    <div className="flex flex-wrap justify-center gap-1.5">
-      {weightOptions.map((weight) => (
-        <button
-          key={weight.label}
-          onClick={(e) => addWeightDirectly(e, weight)}
-          className="inline-flex flex-col items-center gap-1 border-2 border-primary/40 text-primary hover:bg-primary hover:text-primary-foreground px-3 py-2 rounded-lg text-sm font-sans font-semibold transition-colors cursor-pointer min-w-[60px]"
-        >
-          <span className="whitespace-nowrap">{weight.label}</span>
-          <span className="text-[11px] opacity-80">{Math.round(itemPrice * weight.value)} جنيه</span>
-        </button>
-      ))}
-    </div>
-  ) : variant === "table" ? (
+  const button = variant === "table" ? (
     <button
       onClick={handleAdd}
       className="inline-flex items-center gap-2 border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground px-5 py-2.5 rounded-lg text-sm font-sans font-medium transition-colors cursor-pointer"
@@ -271,19 +144,6 @@ export function OrderButton({ itemName, itemPrice, variant = "card", categoryTit
       <Plus className="w-4 h-4" />
       أضف
     </button>
-  ) : isGrills ? (
-    <div className="flex flex-col gap-2 w-full">
-      {weightOptions.map((weight) => (
-        <Button
-          key={weight.label}
-          onClick={(e) => addWeightDirectly(e, weight)}
-          className="w-full bg-primary hover:bg-primary/80 text-primary-foreground h-11 text-sm rounded-lg flex justify-between px-4"
-        >
-          <span>{weight.label}</span>
-          <span className="opacity-80">{Math.round(itemPrice * weight.value)} جنيه</span>
-        </Button>
-      ))}
-    </div>
   ) : (
     <Button
       onClick={handleAdd}
@@ -329,27 +189,6 @@ export function OrderButton({ itemName, itemPrice, variant = "card", categoryTit
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showWeightSelect} onOpenChange={(o) => { setShowWeightSelect(o); if (!o) buttonRef.current = null }}>
-        <DialogContent dir="rtl" className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle className="text-center font-display text-2xl">اختر الوزن</DialogTitle>
-            <p className="text-center text-muted-foreground text-sm mt-1">{itemName}</p>
-          </DialogHeader>
-          <div className="flex flex-col gap-3 py-4">
-            {weightOptions.map((weight) => (
-              <Button
-                key={weight.label}
-                onClick={() => handleWeightSelect(weight)}
-                className="w-full bg-primary hover:bg-primary/80 text-primary-foreground h-14 text-base rounded-lg flex justify-between px-6"
-              >
-                <span>{weight.label}</span>
-                <span className="opacity-80">{itemPrice * weight.value} جنيه</span>
-              </Button>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
-
       <Dialog open={showBranch} onOpenChange={setShowBranch}>
         <DialogContent dir="rtl" className="sm:max-w-[400px]">
           <DialogHeader>
@@ -378,7 +217,7 @@ export function OrderButton({ itemName, itemPrice, variant = "card", categoryTit
             )}
           </DialogHeader>
           <div className="flex flex-col gap-3 py-4">
-            {(selectedBranch ? orderTypeOptions[selectedBranch.name] : []).map((type) => {
+            {(selectedBranch ? (orderTypeOptions[selectedBranch.name] || []) : []).map((type) => {
               const Icon = type.icon
               return (
                 <Button

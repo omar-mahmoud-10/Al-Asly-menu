@@ -56,28 +56,71 @@ async function seed() {
   }
 
   // ── Menu Items ──
+  const weightGroups = [
+    { baseName: 'ريش', kiloPrice: 990, items: [
+      { name: 'كيلو ريش', price: 990 }, { name: 'نصف كيلو ريش', price: 495 }, { name: 'ربع كيلو ريش', price: 248 },
+    ]},
+    { baseName: 'كباب', kiloPrice: 950, items: [
+      { name: 'كيلو كباب', price: 950 }, { name: 'نصف كيلو كباب', price: 475 }, { name: 'ربع كيلو كباب', price: 238 },
+    ]},
+    { baseName: 'استيك', kiloPrice: 950, items: [
+      { name: 'استيك مشوي', price: 950 }, { name: 'نصف استيك', price: 475 }, { name: 'ربع استيك', price: 238 },
+    ]},
+    { baseName: 'نيفا', kiloPrice: 950, items: [
+      { name: 'كيلو نيفا', price: 950 }, { name: 'نصف كيلو نيفا', price: 475 }, { name: 'ربع كيلو نيفا', price: 238 },
+    ]},
+    { baseName: 'مشكل', kiloPrice: 740, items: [
+      { name: 'كيلو مشكل', price: 740 }, { name: 'نصف كيلو مشكل', price: 370 }, { name: 'ربع كيلو مشكل', price: 185 },
+    ]},
+    { baseName: 'كبدة', kiloPrice: 800, items: [
+      { name: 'كيلو كبدة', price: 800 }, { name: 'نصف كيلو كبدة', price: 400 }, { name: 'ربع كيلو كبدة', price: 200 },
+    ]},
+    { baseName: 'مخاصي', kiloPrice: 600, items: [
+      { name: 'كيلو مخاصي', price: 600 }, { name: 'نصف كيلو مخاصي', price: 300 }, { name: 'ربع كيلو مخاصي', price: 150 },
+    ]},
+    { baseName: 'طرب', kiloPrice: 500, items: [
+      { name: 'كيلو طرب', price: 500 }, { name: 'نصف كيلو طرب', price: 250 }, { name: 'ربع كيلو طرب', price: 125 },
+    ]},
+    { baseName: 'كفتة ضاني', kiloPrice: 500, items: [
+      { name: 'كيلو كفتة ضاني', price: 500 }, { name: 'نصف كيلو كفتة ضاني', price: 250 }, { name: 'ربع كيلو كفتة ضاني', price: 125 },
+    ]},
+    { baseName: 'سجق ضاني', kiloPrice: 400, items: [
+      { name: 'كيلو سجق ضاني', price: 400 }, { name: 'نصف كيلو سجق ضاني', price: 200 }, { name: 'ربع كيلو سجق ضاني', price: 100 },
+    ]},
+    { baseName: 'كفتة عجالي', kiloPrice: 350, items: [
+      { name: 'كيلو كفتة عجالي', price: 350 }, { name: 'نصف كيلو كفتة عجالي', price: 175 }, { name: 'ربع كيلو كفتة عجالي', price: 88 },
+    ]},
+    { baseName: 'ممبار', kiloPrice: 300, items: [
+      { name: 'كيلو ممبار', price: 300 }, { name: 'نصف كيلو ممبار', price: 150 }, { name: 'ربع كيلو ممبار', price: 75 },
+    ]},
+    { baseName: 'شيش طاووق', kiloPrice: 400, items: [
+      { name: 'كيلو شيش طاووق', price: 400 }, { name: 'نصف كيلو شيش طاووق', price: 200 }, { name: 'ربع كيلو شيش طاووق', price: 100 },
+    ]},
+  ]
+
+  const standaloneGrills = [
+    { name: 'رقبة تركي', price: 380, order: 101 },
+    { name: 'موزة تركي', price: 380, order: 102 },
+    { name: 'موزة', price: 380, order: 103 },
+    { name: 'موزة بالفتة', price: 400, order: 104 },
+    { name: 'فرخة شيش', price: 300, order: 105 },
+    { name: 'فرخة شواية', price: 320, order: 106 },
+    { name: 'جوز حمام', price: 350, order: 107 },
+  ]
+
   const items = [
-    // ─── مشويات الأصلي ───
-    { name: 'كيلو ريش', price: 990, category: 'cat-grills', order: 1 },
-    { name: 'كيلو كباب', price: 950, category: 'cat-grills', order: 2 },
-    { name: 'استيك مشوي', price: 950, category: 'cat-grills', order: 3 },
-    { name: 'كيلو نيفا', price: 950, category: 'cat-grills', order: 4 },
-    { name: 'كيلو مشكل', price: 740, category: 'cat-grills', order: 5 },
-    { name: 'كيلو كبدة', price: 800, category: 'cat-grills', order: 6 },
-    { name: 'كيلو مخاصي', price: 600, category: 'cat-grills', order: 7 },
-    { name: 'كيلو طرب', price: 500, category: 'cat-grills', order: 8 },
-    { name: 'كيلو كفتة ضاني', price: 500, category: 'cat-grills', order: 9 },
-    { name: 'كيلو سجق ضاني', price: 400, category: 'cat-grills', order: 10 },
-    { name: 'كيلو كفتة عجالي', price: 350, category: 'cat-grills', order: 11 },
-    { name: 'رقبة تركي', price: 380, category: 'cat-grills', order: 12 },
-    { name: 'موزة تركي', price: 380, category: 'cat-grills', order: 13 },
-    { name: 'موزة', price: 380, category: 'cat-grills', order: 14 },
-    { name: 'موزة بالفتة', price: 400, category: 'cat-grills', order: 15 },
-    { name: 'فرخة شيش', price: 300, category: 'cat-grills', order: 16 },
-    { name: 'فرخة شواية', price: 320, category: 'cat-grills', order: 17 },
-    { name: 'جوز حمام', price: 350, category: 'cat-grills', order: 18 },
-    { name: 'كيلو ممبار', price: 300, category: 'cat-grills', order: 19 },
-    { name: 'كيلو شيش طاووق', price: 400, category: 'cat-grills', order: 20 },
+    // ─── مشويات الأصلي (weight groups) ───
+    ...weightGroups.flatMap((group, gi) =>
+      group.items.map((item, wi) => ({
+        name: item.name,
+        price: item.price,
+        category: 'cat-grills',
+        order: gi * 10 + wi + 1,
+        group: group.baseName,
+      }))
+    ),
+    // ─── مشويات الأصلي (standalone) ───
+    ...standaloneGrills.map(item => ({ ...item, category: 'cat-grills' })),
 
     // ─── مطبخ الأصلي ───
     { name: 'طاجن فواكه الأصلي', price: 200, category: 'cat-kitchen', order: 1 },
@@ -236,6 +279,7 @@ async function seed() {
       slug: { _type: 'slug', current: slug },
       price: item.price,
       description: item.description || '',
+      ...(item.group ? { group: item.group } : {}),
       category: { _type: 'reference', _ref: createdCategories[item.category] },
       isActive: true,
       order: item.order,

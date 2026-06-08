@@ -9,6 +9,7 @@ export async function getMenuItems() {
     description,
     price,
     image,
+    group,
     "category": category->{
       _id,
       title,
@@ -37,6 +38,7 @@ export async function getMenuItemsByCategory(slug: string) {
       "slug": slug.current,
       description,
       price,
+      group,
       image
     }
   }`

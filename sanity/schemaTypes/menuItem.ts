@@ -55,6 +55,12 @@ export default defineType({
       type: 'number',
       description: 'رقم أقل = يظهر أولاً',
     }),
+    defineField({
+      name: 'group',
+      title: 'المجموعة',
+      type: 'string',
+      description: 'لتجميع الأوزان المختلفة لنفس الصنف (مثلاً: "ريش" لتجميع كيلو ريش، نصف كيلو ريش، ربع كيلو ريش) - اترك فارغاً إذا كان الصنف غير قابل للتقسيم',
+    }),
   ],
   preview: {
     select: {
