@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useCallback } from "react"
 import { Plus, ShoppingCart, Check, MessageCircle, Utensils, Package, Bike } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -101,6 +101,35 @@ export function OrderButton({ itemName, itemPrice, variant = "card" }: OrderButt
     }
   }
 
+  const saveOrderToDB = useCallback(async (orderType: string, name: string, address: string, phone: string) => {
+    if (!selectedBranch) return
+    const orderItems = items.length > 0
+      ? items.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity }))
+      : [{ id, name: itemName, price: itemPrice, quantity: 1 }]
+    const total = items.length > 0
+      ? items.reduce((sum, i) => sum + i.price * i.quantity, 0)
+      : itemPrice
+    try {
+      await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: orderItems,
+          totalPrice: total,
+          branch: selectedBranch.name,
+          branchPhone: selectedBranch.phone,
+          orderType,
+          customerName: name,
+          customerAddress: address,
+          customerPhone: phone,
+          status: 'pending',
+        }),
+      })
+    } catch (err) {
+      console.error('Failed to save order:', err)
+    }
+  }, [selectedBranch, items, itemName, itemPrice, id])
+
   const handleSendOrder = (orderType: string, name: string, address: string, phone: string) => {
     if (!selectedBranch) return
     const allItems = items.length > 0
@@ -125,6 +154,7 @@ export function OrderButton({ itemName, itemPrice, variant = "card" }: OrderButt
 
     const message = `${header}\n\nالطلب:\n${allItems}${footer}`
     window.open(`https://wa.me/${selectedBranch.phone}?text=${encodeURIComponent(message)}`, "_blank")
+    saveOrderToDB(orderType, name, address, phone)
     setShowCustomerForm(false)
     setShowOrderType(false)
     setShowSuccess(false)

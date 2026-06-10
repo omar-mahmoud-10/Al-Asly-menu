@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { ShoppingCart, Plus, Minus, Trash2, MessageCircle, Package, Bike, Utensils } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
@@ -81,10 +81,34 @@ export function CartSheet() {
     }
   }
 
+  const saveOrderToDB = useCallback(async (orderType: string, name: string, address: string, phone: string) => {
+    if (!selectedBranch) return
+    try {
+      await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: items.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })),
+          totalPrice,
+          branch: selectedBranch.name,
+          branchPhone: selectedBranch.phone,
+          orderType,
+          customerName: name,
+          customerAddress: address,
+          customerPhone: phone,
+          status: 'pending',
+        }),
+      })
+    } catch (err) {
+      console.error('Failed to save order:', err)
+    }
+  }, [selectedBranch, items, totalPrice])
+
   const handleSendOrder = (orderType: string, name: string, address: string, phone: string) => {
     if (!selectedBranch) return
     const message = buildMessage(selectedBranch.name, orderType, name, address, phone)
     window.open(`https://wa.me/${selectedBranch.phone}?text=${encodeURIComponent(message)}`, "_blank")
+    saveOrderToDB(orderType, name, address, phone)
     setShowCustomerForm(false)
     setShowOrderTypeDialog(false)
     setShowBranchDialog(false)
