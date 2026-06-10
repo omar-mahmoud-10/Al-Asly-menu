@@ -42,7 +42,7 @@ export default function LoginPage() {
         <h1 className="text-4xl font-display text-primary tracking-wide">الأصلى</h1>
         <p className="text-gold/70 text-sm mt-1">للمشويات</p>
         <p className="text-foreground/80 text-base font-bold mt-6 max-w-xs leading-relaxed">
-          الموقع الإلكتروني للأصلي للمشويات متاح قريبا إن شاء الله
+          الموقع الإلكتروني للأصلي للمشويات سيكون متاح قريبا إن شاء الله
         </p>
       </div>
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-6">
