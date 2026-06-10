@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Clock, MapPin, Phone, User, Package, Bike, Utensils, ShoppingBag, AlertTriangle, CheckCircle, XCircle, Eye, ChevronDown, ChevronUp, Bell, LogOut, RefreshCw } from 'lucide-react'
+import { Clock, MapPin, Phone, User, Package, Bike, Utensils, ShoppingBag, AlertTriangle, CheckCircle, Eye, ChevronDown, ChevronUp, Bell, LogOut, RefreshCw } from 'lucide-react'
 
 interface OrderItem {
   id: string
@@ -20,12 +20,11 @@ interface Order {
   customerName: string
   customerAddress: string
   customerPhone: string
-  status: 'pending' | 'confirmed' | 'completed'
+  status: 'pending' | 'confirmed'
   createdAt: string
   viewed: boolean
 }
 
-const PASSWORD = 'elasly1211'
 const ORDER_TYPE_ICONS: Record<string, any> = {
   'تيك أواي': Package,
   'دليفرى': Bike,
@@ -61,6 +60,42 @@ function playNotificationSound() {
   } catch {}
 }
 
+function requestNotificationPermission() {
+  if (!('Notification' in window)) return
+  if (Notification.permission === 'default') {
+    Notification.requestPermission()
+  }
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {})
+  }
+}
+
+function showSystemNotification(title: string, body: string) {
+  const sendViaSW = () => {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'show-notification', title, body })
+      return true
+    }
+    return false
+  }
+
+  if (!('Notification' in window)) return
+  if (Notification.permission === 'granted') {
+    if (!sendViaSW()) {
+      new Notification(title, { body, icon: '/logo_metaTitle.jpg', tag: 'new-order', requireInteraction: true })
+    }
+  }
+  if (Notification.permission === 'default') {
+    Notification.requestPermission().then(perm => {
+      if (perm === 'granted') {
+        if (!sendViaSW()) {
+          new Notification(title, { body, icon: '/logo_metaTitle.jpg', tag: 'new-order', requireInteraction: true })
+        }
+      }
+    })
+  }
+}
+
 function formatDate(iso: string) {
   const d = new Date(iso)
   const now = new Date()
@@ -85,11 +120,25 @@ export default function OrdersDashboard() {
   const lastOrderCount = useRef(0)
   const audioInitialized = useRef(false)
 
+  const [authLoading, setAuthLoading] = useState(true)
+
   useEffect(() => {
-    const stored = sessionStorage.getItem('orders_dashboard_auth')
-    if (stored === PASSWORD) {
-      setAuthenticated(true)
+    const verifyToken = async () => {
+      const stored = sessionStorage.getItem('orders_dashboard_token')
+      if (stored) {
+        try {
+          const res = await fetch(`/api/orders-login?token=${encodeURIComponent(stored)}`)
+          if (res.ok) {
+            setAuthenticated(true)
+            setAuthLoading(false)
+            return
+          }
+        } catch {}
+        sessionStorage.removeItem('orders_dashboard_token')
+      }
+      setAuthLoading(false)
     }
+    verifyToken()
   }, [])
 
   const fetchOrders = useCallback(async () => {
@@ -101,6 +150,14 @@ export default function OrdersDashboard() {
           playNotificationSound()
           setHasNewOrder(true)
           setTimeout(() => setHasNewOrder(false), 5000)
+          const newOrders = data.slice(lastOrderCount.current)
+          newOrders.forEach((o: Order) => {
+            const items = o.items.map(i => `${i.name} ×${i.quantity}`).join('، ')
+            showSystemNotification(
+              `طلب جديد من ${o.customerName || o.branch}`,
+              `${o.branch} - ${o.orderType}\n${items}\nالإجمالي: ${o.totalPrice} جنيه`
+            )
+          })
         }
         lastOrderCount.current = data.length
         setOrders(data)
@@ -114,6 +171,7 @@ export default function OrdersDashboard() {
 
   useEffect(() => {
     if (!authenticated) return
+    requestNotificationPermission()
     fetchOrders()
     const interval = setInterval(fetchOrders, 10000)
     return () => clearInterval(interval)
@@ -134,19 +192,30 @@ export default function OrdersDashboard() {
     }
   }, [authenticated, orders.length, markAsViewed])
 
-  const handlePassword = (e: React.FormEvent) => {
+  const handlePassword = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (passwordInput === PASSWORD) {
-      sessionStorage.setItem('orders_dashboard_auth', PASSWORD)
-      setAuthenticated(true)
-      setPasswordError(false)
-    } else {
+    setPasswordError(false)
+    try {
+      const res = await fetch('/api/orders-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: passwordInput }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        sessionStorage.setItem('orders_dashboard_token', data.token)
+        setAuthenticated(true)
+        setPasswordInput('')
+      } else {
+        setPasswordError(true)
+      }
+    } catch {
       setPasswordError(true)
     }
   }
 
   const handleLogout = () => {
-    sessionStorage.removeItem('orders_dashboard_auth')
+    sessionStorage.removeItem('orders_dashboard_token')
     setAuthenticated(false)
     setOrders([])
     lastOrderCount.current = 0
@@ -163,10 +232,16 @@ export default function OrdersDashboard() {
     } catch {}
   }
 
-  const unviewedOrders = orders.filter(o => !o.viewed).length
   const pendingOrders = orders.filter(o => o.status === 'pending').length
   const confirmedOrders = orders.filter(o => o.status === 'confirmed').length
-  const completedOrders = orders.filter(o => o.status === 'completed').length
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
 
   if (!authenticated) {
     return (
@@ -193,7 +268,7 @@ export default function OrdersDashboard() {
           />
           {passwordError && (
             <p className="text-destructive text-sm text-center flex items-center justify-center gap-2">
-              <XCircle className="w-4 h-4" />
+              <AlertTriangle className="w-4 h-4" />
               كلمة المرور غير صحيحة
             </p>
           )}
@@ -235,10 +310,6 @@ export default function OrdersDashboard() {
               <div className="bg-secondary/50 rounded-lg px-3 py-2 text-center">
                 <p className="text-primary font-bold text-lg">{confirmedOrders}</p>
                 <p className="text-muted-foreground">مؤكد</p>
-              </div>
-              <div className="bg-secondary/50 rounded-lg px-3 py-2 text-center">
-                <p className="text-green-400 font-bold text-lg">{completedOrders}</p>
-                <p className="text-muted-foreground">مكتمل</p>
               </div>
             </div>
             <button
@@ -302,7 +373,9 @@ export default function OrdersDashboard() {
                   const OrderTypeIcon = ORDER_TYPE_ICONS[order.orderType] || ShoppingBag
                   const isExpanded = expandedOrder === order.id
                   return (
-                    <tr key={order.id} className={`border-b border-border/50 hover:bg-secondary/30 transition-colors ${!order.viewed ? 'bg-primary/5' : ''}`}>
+                    <tr key={order.id} className={`border-b border-border/50 hover:bg-secondary/30 transition-colors ${
+                      order.status === 'confirmed' ? 'bg-green-950/40' : !order.viewed ? 'bg-primary/5' : ''
+                    }`}>
                       <td className="px-4 py-3 text-sm text-foreground">
                         <div className="flex items-center gap-2">
                           {!order.viewed && <Eye className="w-3 h-3 text-primary" />}
@@ -371,48 +444,24 @@ export default function OrdersDashboard() {
                       <td className="px-4 py-3 text-sm">
                         <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
                           order.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
-                          order.status === 'confirmed' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
-                          'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                          'bg-green-500/20 text-green-400 border border-green-500/30'
                         }`}>
-                          {order.status === 'pending' && <AlertTriangle className="w-3 h-3" />}
-                          {order.status === 'confirmed' && <CheckCircle className="w-3 h-3" />}
-                          {order.status === 'completed' && <XCircle className="w-3 h-3" />}
-                          {order.status === 'pending' ? 'بانتظار التأكيد' : order.status === 'confirmed' ? 'مؤكد' : 'مكتمل'}
+                          {order.status === 'pending' ? <AlertTriangle className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
+                          {order.status === 'pending' ? 'بانتظار التأكيد' : 'مؤكد'}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm">
-                        <div className="flex gap-1">
-                          {order.status === 'pending' && (
-                            <>
-                              <button
-                                onClick={() => updateOrderStatus(order.id, 'confirmed')}
-                                className="px-2.5 py-1.5 bg-green-500/20 text-green-400 rounded-lg text-xs hover:bg-green-500/30 transition-colors cursor-pointer border border-green-500/30"
-                                title="تأكيد الطلب"
-                              >
-                                تأكيد
-                              </button>
-                              <button
-                                onClick={() => updateOrderStatus(order.id, 'completed')}
-                                className="px-2.5 py-1.5 bg-blue-500/20 text-blue-400 rounded-lg text-xs hover:bg-blue-500/30 transition-colors cursor-pointer border border-blue-500/30"
-                                title="إتمام الطلب"
-                              >
-                                إتمام
-                              </button>
-                            </>
-                          )}
-                          {order.status === 'confirmed' && (
-                            <button
-                              onClick={() => updateOrderStatus(order.id, 'completed')}
-                              className="px-2.5 py-1.5 bg-blue-500/20 text-blue-400 rounded-lg text-xs hover:bg-blue-500/30 transition-colors cursor-pointer border border-blue-500/30"
-                              title="إتمام الطلب"
-                            >
-                              إتمام
-                            </button>
-                          )}
-                          {order.status === 'completed' && (
-                            <span className="text-muted-foreground text-xs">—</span>
-                          )}
-                        </div>
+                        {order.status === 'pending' && (
+                          <button
+                            onClick={() => updateOrderStatus(order.id, 'confirmed')}
+                            className="px-3 py-1.5 bg-green-500/20 text-green-400 rounded-lg text-xs hover:bg-green-500/30 transition-colors cursor-pointer border border-green-500/30 font-medium"
+                          >
+                           تأكيد الأوردر
+                          </button>
+                        )}
+                        {order.status === 'confirmed' && (
+                          <span className="text-green-500/60 text-xs">✓ مؤكد</span>
+                        )}
                       </td>
                     </tr>
                   )

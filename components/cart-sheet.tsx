@@ -7,6 +7,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useCart } from "@/lib/cart-context"
 import { Badge } from "@/components/ui/badge"
+import { useToast } from "@/hooks/use-toast"
 
 const branches = [
   { name: "فرع موقف مصر", phone: "201206170001" },
@@ -36,6 +37,7 @@ export function CartSheet() {
   const [customerAddress, setCustomerAddress] = useState("")
   const [customerPhone, setCustomerPhone] = useState("")
   const [shouldWiggle, setShouldWiggle] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => {
     if (totalItems > 0) {
@@ -84,7 +86,7 @@ export function CartSheet() {
   const saveOrderToDB = useCallback(async (orderType: string, name: string, address: string, phone: string) => {
     if (!selectedBranch) return
     try {
-      await fetch('/api/orders', {
+      const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -99,10 +101,16 @@ export function CartSheet() {
           status: 'pending',
         }),
       })
+      if (!res.ok) {
+        const errData = await res.json()
+        throw new Error(errData.error || 'فشل حفظ الطلب')
+      }
+      toast({ title: 'تم حفظ الطلب', description: 'يمكنك متابعة الطلبات من لوحة التحكم' })
     } catch (err) {
       console.error('Failed to save order:', err)
+      toast({ title: 'فشل حفظ الطلب', description: 'حدث خطأ أثناء حفظ الطلب، برجاء المحاولة مرة أخرى', variant: 'destructive' })
     }
-  }, [selectedBranch, items, totalPrice])
+  }, [selectedBranch, items, totalPrice, toast])
 
   const handleSendOrder = (orderType: string, name: string, address: string, phone: string) => {
     if (!selectedBranch) return

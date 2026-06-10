@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Amiri, Cairo, Rakkas } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { CartProvider } from '@/lib/cart-context'
+import { Toaster } from '@/components/ui/toaster'
 import './globals.css'
 
 const amiri = Amiri({
@@ -43,6 +44,7 @@ export default function RootLayout({
         <CartProvider>
           {children}
         </CartProvider>
+        <Toaster />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

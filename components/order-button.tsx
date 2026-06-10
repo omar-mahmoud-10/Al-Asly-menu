@@ -5,6 +5,7 @@ import { Plus, ShoppingCart, Check, MessageCircle, Utensils, Package, Bike } fro
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useCart } from "@/lib/cart-context"
+import { useToast } from "@/hooks/use-toast"
 
 const branches = [
   { name: "فرع موقف مصر", phone: "201206170001" },
@@ -31,6 +32,7 @@ interface OrderButtonProps {
 
 export function OrderButton({ itemName, itemPrice, variant = "card" }: OrderButtonProps) {
   const { items, addItem, clearCart } = useCart()
+  const { toast } = useToast()
   const [showSuccess, setShowSuccess] = useState(false)
   const [showBranch, setShowBranch] = useState(false)
   const [showOrderType, setShowOrderType] = useState(false)
@@ -110,7 +112,7 @@ export function OrderButton({ itemName, itemPrice, variant = "card" }: OrderButt
       ? items.reduce((sum, i) => sum + i.price * i.quantity, 0)
       : itemPrice
     try {
-      await fetch('/api/orders', {
+      const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -125,10 +127,16 @@ export function OrderButton({ itemName, itemPrice, variant = "card" }: OrderButt
           status: 'pending',
         }),
       })
+      if (!res.ok) {
+        const errData = await res.json()
+        throw new Error(errData.error || 'فشل حفظ الطلب')
+      }
+      toast({ title: 'تم حفظ الطلب', description: 'يمكنك متابعة الطلبات من لوحة التحكم' })
     } catch (err) {
       console.error('Failed to save order:', err)
+      toast({ title: 'فشل حفظ الطلب', description: 'حدث خطأ أثناء حفظ الطلب، برجاء المحاولة مرة أخرى', variant: 'destructive' })
     }
-  }, [selectedBranch, items, itemName, itemPrice, id])
+  }, [selectedBranch, items, itemName, itemPrice, id, toast])
 
   const handleSendOrder = (orderType: string, name: string, address: string, phone: string) => {
     if (!selectedBranch) return
