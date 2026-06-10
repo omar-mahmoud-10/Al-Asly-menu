@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     if (msg.includes('token') || msg.includes('unauthorized') || msg.includes('401') || msg.includes('SANITY_API_TOKEN')) {
       return NextResponse.json({ error: 'Sanity API token missing or invalid on Vercel. أضف SANITY_API_TOKEN في Vercel Dashboard → Settings → Environment Variables' }, { status: 500 })
     }
-    return NextResponse.json({ error: 'فشل حفظ الطلب في قاعدة البيانات' }, { status: 500 })
+    return NextResponse.json({ error: 'فشل حفظ الطلب', details: msg }, { status: 500 })
   }
 }
 

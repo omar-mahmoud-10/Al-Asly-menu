@@ -103,7 +103,7 @@ export function CartSheet() {
       })
       if (!res.ok) {
         const errData = await res.json()
-        throw new Error(errData.error || 'فشل حفظ الطلب')
+        throw new Error(errData.details || errData.error || 'فشل حفظ الطلب')
       }
       toast({ title: 'تم حفظ الطلب', description: 'يمكنك متابعة الطلبات من لوحة التحكم' })
     } catch (err) {
