@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { client } from '@/sanity/lib/client'
-import { getProjectId, getDataset, token } from '@/sanity/env'
+import { client, writeClient } from '@/sanity/lib/client'
 import { groq } from 'next-sanity'
-
-function getMutationUrl() {
-  return `https://${getProjectId()}.api.sanity.io/v2024-01-01/data/mutate/${getDataset()}`
-}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -22,17 +17,10 @@ export async function GET(request: NextRequest) {
     if (markViewed === 'true') {
       const unviewedIds = mapped.filter((o: any) => !o.viewed).map((o: any) => o._id)
       if (unviewedIds.length > 0) {
-        const patches = unviewedIds.map((id: string) => ({
-          patch: { id, set: { viewed: true } }
-        }))
-        await fetch(getMutationUrl(), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ mutations: patches }),
-        })
+        const transaction = unviewedIds.map((id: string) =>
+          writeClient.patch(id).set({ viewed: true })
+        )
+        await writeClient.transaction(transaction).commit()
       }
     }
 
@@ -45,7 +33,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    if (!token) {
+    if (!writeClient.config().token) {
       return NextResponse.json({
         error: 'SANITY_API_TOKEN غير موجود',
         details: 'أضف SANITY_API_TOKEN في Vercel Dashboard → Settings → Environment Variables بنفس القيمة اللي في ملف .env.local'
@@ -53,44 +41,24 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const mutationBody = {
-      mutations: [{
-        create: {
-          _type: 'order',
-          ...body,
-          createdAt: new Date().toISOString(),
-          viewed: false,
-        }
-      }]
-    }
-
-    const res = await fetch(getMutationUrl(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(mutationBody),
+    const doc = await writeClient.create({
+      _type: 'order',
+      ...body,
+      createdAt: new Date().toISOString(),
+      viewed: false,
     })
 
-    const result = await res.json()
+    return NextResponse.json({ id: doc._id }, { status: 201 })
+  } catch (error: any) {
+    console.error('Failed to save order:', JSON.stringify({ message: error.message, status: error.statusCode, details: error.details }))
 
-    if (!res.ok) {
-      console.error('Sanity API error:', JSON.stringify(result))
-      let msg = result?.error?.description || result?.message || JSON.stringify(result)
-      if (msg.includes('already exists')) {
-        return NextResponse.json({ success: true, id: 'duplicate' })
-      }
+    if (error.statusCode === 401 || error.message?.includes('Session not found') || error.message?.includes('session not found')) {
       return NextResponse.json({
-        error: 'رفض Sanity حفظ الطلب',
-        details: msg.substring(0, 300)
+        error: 'خطأ في التوثيق مع Sanity',
+        details: 'توكن SANITY_API_TOKEN غير صالح أو لا يملك صلاحيات الكتابة. تأكد من وضع التوكن الصحيح في Vercel Dashboard → Settings → Environment Variables',
       }, { status: 500 })
     }
 
-    const docId = result?.results?.[0]?.id || result?.document?._id || 'unknown'
-    return NextResponse.json({ id: docId }, { status: 201 })
-  } catch (error: any) {
-    console.error('Failed to save order:', error)
     return NextResponse.json({
       error: 'خطأ في الاتصال بقاعدة البيانات',
       details: error?.message || 'unknown error'
@@ -101,21 +69,7 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const { id, status } = await request.json()
-
-    const res = await fetch(getMutationUrl(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ mutations: [{ patch: { id, set: { status } } }] }),
-    })
-
-    if (!res.ok) {
-      const result = await res.json()
-      throw new Error(result?.error?.description || 'فشل تحديث الطلب')
-    }
-
+    await writeClient.patch(id).set({ status }).commit()
     return NextResponse.json({ success: true })
   } catch (error: any) {
     console.error('Failed to update order:', error)
