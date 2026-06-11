@@ -136,6 +136,7 @@ export default function OrdersDashboard() {
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
   const [hasNewOrder, setHasNewOrder] = useState(false)
   const [authLoading, setAuthLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
   const [requestSent, setRequestSent] = useState(false)
   const [requestLoading, setRequestLoading] = useState(false)
   const [pendingRequests, setPendingRequests] = useState(0)
@@ -225,16 +226,27 @@ export default function OrdersDashboard() {
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setEmailError(false)
-    setRequestSent(false)
+    setRequestLoading(true)
     try {
-      const res = await fetch('/api/orders-login', {
+      const loginRes = await fetch('/api/orders-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: emailInput.trim() }),
       })
-      if (res.ok) {
-        const data = await res.json()
+      if (loginRes.ok) {
+        const data = await loginRes.json()
         setStaff(data.staff)
+        setEmailInput('')
+        setRequestLoading(false)
+        return
+      }
+      const accessRes = await fetch('/api/access-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailInput.trim() }),
+      })
+      if (accessRes.ok) {
+        setRequestSent(true)
         setEmailInput('')
       } else {
         setEmailError(true)
@@ -242,21 +254,6 @@ export default function OrdersDashboard() {
     } catch {
       setEmailError(true)
     }
-  }
-
-  const handleRequestAccess = async () => {
-    setRequestLoading(true)
-    try {
-      const res = await fetch('/api/access-request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailInput.trim() }),
-      })
-      if (res.ok) {
-        setRequestSent(true)
-        setEmailError(false)
-      }
-    } catch {}
     setRequestLoading(false)
   }
 
@@ -301,61 +298,75 @@ export default function OrdersDashboard() {
           <h1 className="text-3xl font-display text-primary tracking-wide">لوحة الطلبات</h1>
           <p className="text-foreground/60 text-sm mt-2">elsaly birket elsaba</p>
         </div>
-        <form onSubmit={handleEmailSubmit} className="w-full max-w-sm space-y-4">
-          <div className="text-center space-y-2">
-            <h2 className="text-xl font-display text-foreground">تسجيل الدخول</h2>
-            <p className="text-muted-foreground text-sm">يرجى إدخال البريد الإلكتروني المصرح به</p>
+
+        {!showForm ? (
+          <div className="w-full max-w-sm text-center space-y-6">
+            <div className="space-y-2">
+              <h2 className="text-xl font-display text-foreground">ليس لديك صلاحية الوصول</h2>
+              <p className="text-muted-foreground text-sm">
+                هذه الصفحة مخصصة لفريق العمل فقط. إذا كنت أحد الموظفين، يرجى طلب إذن الوصول من المدير.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowForm(true)}
+              className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/80 text-primary-foreground h-12 rounded-lg text-base font-medium cursor-pointer"
+            >
+              <Send className="w-5 h-5" />
+              طلب إذن الوصول من المدير
+            </button>
           </div>
-          <input
-            type="email"
-            value={emailInput}
-            onChange={(e) => { setEmailInput(e.target.value); setEmailError(false) }}
-            placeholder="البريد الإلكتروني"
-            autoFocus
-            dir="ltr"
-            className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-center text-lg"
-          />
-          {emailError && !requestSent && (
-            <div className="space-y-3">
+        ) : requestSent ? (
+          <div className="w-full max-w-sm text-center space-y-4">
+            <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-6">
+              <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
+              <p className="text-green-400 text-base font-medium">تم إرسال طلب الوصول</p>
+              <p className="text-muted-foreground text-sm mt-1">سيتم مراجعة طلبك من قبل المدير</p>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleEmailSubmit} className="w-full max-w-sm space-y-4">
+            <div className="text-center space-y-2">
+              <h2 className="text-xl font-display text-foreground">أدخل بريدك الإلكتروني</h2>
+              <p className="text-muted-foreground text-sm">سيتم إرسال طلب الوصول إلى المدير</p>
+            </div>
+            <input
+              type="email"
+              value={emailInput}
+              onChange={(e) => { setEmailInput(e.target.value); setEmailError(false) }}
+              placeholder="البريد الإلكتروني"
+              autoFocus
+              dir="ltr"
+              className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-center text-lg"
+            />
+            {emailError && (
               <p className="text-destructive text-sm text-center flex items-center justify-center gap-2">
                 <AlertTriangle className="w-4 h-4" />
-                البريد الإلكتروني غير مصرح به
+                حدث خطأ في إرسال الطلب
               </p>
-              <button
-                type="button"
-                onClick={handleRequestAccess}
-                disabled={requestLoading}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-primary/50 text-primary hover:bg-primary/10 transition-colors text-sm font-medium cursor-pointer disabled:opacity-50"
-              >
-                {requestLoading ? (
-                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <Send className="w-4 h-4" />
-                    طلب إذن الوصول من المدير
-                  </>
-                )}
-              </button>
-            </div>
-          )}
-          {requestSent && (
-            <div className="text-center space-y-3">
-              <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
-                <p className="text-green-400 text-sm font-medium">تم إرسال طلب الوصول</p>
-                <p className="text-muted-foreground text-xs mt-1">سيتم مراجعة طلبك من قبل المدير</p>
-              </div>
-            </div>
-          )}
-          {!requestSent && (
+            )}
             <button
               type="submit"
-              disabled={!emailInput}
-              className="w-full bg-primary hover:bg-primary/80 text-primary-foreground h-12 rounded-lg text-base font-medium disabled:opacity-50 cursor-pointer"
+              disabled={!emailInput || requestLoading}
+              className="w-full bg-primary hover:bg-primary/80 text-primary-foreground h-12 rounded-lg text-base font-medium disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
             >
-              دخول
+              {requestLoading ? (
+                <div className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <Send className="w-5 h-5" />
+                  إرسال طلب الوصول
+                </>
+              )}
             </button>
-          )}
-        </form>
+            <button
+              type="button"
+              onClick={() => setShowForm(false)}
+              className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            >
+              رجوع
+            </button>
+          </form>
+        )}
       </div>
     )
   }
