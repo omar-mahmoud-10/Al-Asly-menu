@@ -1,11 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import { ShoppingBag, AlertTriangle, Mail } from 'lucide-react'
 
-export default function StaffLoginPage() {
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -23,7 +25,8 @@ export default function StaffLoginPage() {
       })
 
       if (res.ok) {
-        router.push('/orderselaslybirketelsaba')
+        const redirect = searchParams.get('redirect') || '/orderselaslybirketelsaba'
+        router.push(redirect)
       } else {
         const data = await res.json()
         setError(data.error || 'فشل تسجيل الدخول')
@@ -81,5 +84,17 @@ export default function StaffLoginPage() {
         </button>
       </form>
     </div>
+  )
+}
+
+export default function StaffLoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }
