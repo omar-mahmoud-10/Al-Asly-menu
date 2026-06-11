@@ -61,6 +61,27 @@ export default defineType({
       type: 'string',
       description: 'لتجميع الأوزان المختلفة لنفس الصنف (مثلاً: "ريش" لتجميع كيلو ريش، نصف كيلو ريش، ربع كيلو ريش) - اترك فارغاً إذا كان الصنف غير قابل للتقسيم',
     }),
+    defineField({
+      name: 'priceOptions',
+      title: 'خيارات الأسعار',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            { name: 'label', type: 'string', title: 'المسمى', options: { list: ['ثمن', 'ربع', 'نصف', 'ثلاث ارباع', 'كيلو'] } },
+            { name: 'price', type: 'number', title: 'السعر', validation: (Rule) => Rule.required().min(0) },
+          ],
+          preview: {
+            select: { title: 'label', subtitle: 'price' },
+            prepare({ title, subtitle }: { title?: string; subtitle?: number }) {
+              return { title: title || '', subtitle: subtitle ? `${subtitle} جنيه` : '' }
+            },
+          },
+        },
+      ],
+      description: 'للأصناف التي لها أوزان متعددة (مثل: ثمن، ربع، نصف، ثلاث ارباع، كيلو)',
+    }),
   ],
   preview: {
     select: {

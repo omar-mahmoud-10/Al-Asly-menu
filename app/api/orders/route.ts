@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { client, writeClient } from '@/sanity/lib/client'
 import { groq } from 'next-sanity'
+import { requireStaff } from '@/lib/auth-middleware'
 
 export async function GET(request: NextRequest) {
+  const auth = await requireStaff(request)
+  if (auth instanceof NextResponse) return auth
+
   const { searchParams } = new URL(request.url)
   const markViewed = searchParams.get('markViewed')
 
@@ -14,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     const mapped = orders.map((o: any) => ({ ...o, id: o._id }))
 
-    if (markViewed === 'true') {
+    if (markViewed === 'true' && (auth.staff.role === 'admin' || auth.staff.role === 'manager')) {
       const unviewedIds = mapped.filter((o: any) => !o.viewed).map((o: any) => o._id)
       if (unviewedIds.length > 0) {
         const transaction = unviewedIds.map((id: string) =>
@@ -67,6 +71,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  const auth = await requireStaff(request)
+  if (auth instanceof NextResponse) return auth
+
   try {
     const { id, status } = await request.json()
     await writeClient.patch(id).set({ status }).commit()

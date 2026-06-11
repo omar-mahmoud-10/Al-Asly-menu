@@ -85,6 +85,7 @@ export default async function CategoryPage({
 
                   for (const item of ungrouped) {
                     const isLast = rowIndex === totalRows - 1
+                    const hasPriceOptions = item.priceOptions && item.priceOptions.length > 0
                     rows.push(
                       <tr key={item._id} className={`border-b border-border transition-colors hover:bg-white/5 ${isLast ? 'border-b-0' : ''}`}>
                         <td className="py-5 px-6">
@@ -93,12 +94,20 @@ export default async function CategoryPage({
                             <p className="text-sm text-muted-foreground mt-1 font-sans">{item.description}</p>
                           )}
                         </td>
-                        <td className="py-5 px-6">
-                          <span className="font-display text-xl text-primary">{item.price} جنيه</span>
-                        </td>
-                        <td className="py-5 px-6 text-center">
-                          <OrderButton itemName={item.name} itemPrice={item.price} variant="table" />
-                        </td>
+                        {hasPriceOptions ? (
+                          <td colSpan={2} className="py-5 px-6 text-center">
+                            <OrderButton itemName={item.name} itemPrice={item.price} variant="table" priceOptions={item.priceOptions} />
+                          </td>
+                        ) : (
+                          <>
+                            <td className="py-5 px-6">
+                              <span className="font-display text-xl text-primary">{item.price} جنيه</span>
+                            </td>
+                            <td className="py-5 px-6 text-center">
+                              <OrderButton itemName={item.name} itemPrice={item.price} variant="table" />
+                            </td>
+                          </>
+                        )}
                       </tr>
                     )
                     rowIndex++
@@ -115,6 +124,7 @@ export default async function CategoryPage({
                     rowIndex++
                     for (const item of groupItems) {
                       const isLast = rowIndex >= totalRows - 1
+                      const hasPriceOptions = item.priceOptions && item.priceOptions.length > 0
                       rows.push(
                         <tr key={item._id} className={`border-b border-border transition-colors hover:bg-white/5 ${isLast ? 'border-b-0' : ''}`}>
                           <td className="py-5 px-6 pr-12">
@@ -123,12 +133,20 @@ export default async function CategoryPage({
                               <p className="text-sm text-muted-foreground mt-1 font-sans">{item.description}</p>
                             )}
                           </td>
-                          <td className="py-5 px-6">
-                            <span className="font-display text-xl text-primary">{item.price} جنيه</span>
-                          </td>
-                          <td className="py-5 px-6 text-center">
-                            <OrderButton itemName={item.name} itemPrice={item.price} variant="table" />
-                          </td>
+                          {hasPriceOptions ? (
+                            <td colSpan={2} className="py-5 px-6 text-center">
+                              <OrderButton itemName={item.name} itemPrice={item.price} variant="table" priceOptions={item.priceOptions} />
+                            </td>
+                          ) : (
+                            <>
+                              <td className="py-5 px-6">
+                                <span className="font-display text-xl text-primary">{item.price} جنيه</span>
+                              </td>
+                              <td className="py-5 px-6 text-center">
+                                <OrderButton itemName={item.name} itemPrice={item.price} variant="table" />
+                              </td>
+                            </>
+                          )}
                         </tr>
                       )
                       rowIndex++

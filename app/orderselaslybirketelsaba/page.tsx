@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Clock, MapPin, Phone, User, Package, Bike, Utensils, ShoppingBag, AlertTriangle, CheckCircle, Eye, ChevronDown, ChevronUp, Bell, LogOut, RefreshCw } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Clock, MapPin, Phone, User, Package, Bike, Utensils, ShoppingBag, AlertTriangle, CheckCircle, Eye, ChevronDown, ChevronUp, Bell, LogOut, RefreshCw, Shield, Mail } from 'lucide-react'
 
 interface OrderItem {
   id: string
@@ -25,10 +26,28 @@ interface Order {
   viewed: boolean
 }
 
+interface StaffInfo {
+  email: string
+  role: 'admin' | 'manager' | 'staff'
+  id: string
+}
+
 const ORDER_TYPE_ICONS: Record<string, any> = {
   'تيك أواي': Package,
   'دليفرى': Bike,
   'صالة': Utensils,
+}
+
+const ROLE_LABELS: Record<string, string> = {
+  admin: 'مدير',
+  manager: 'مشرف',
+  staff: 'موظف',
+}
+
+const ROLE_COLORS: Record<string, string> = {
+  admin: 'text-red-400 border-red-500/30 bg-red-500/10',
+  manager: 'text-blue-400 border-blue-500/30 bg-blue-500/10',
+  staff: 'text-green-400 border-green-500/30 bg-green-500/10',
 }
 
 function playNotificationSound() {
@@ -110,9 +129,8 @@ function formatDate(iso: string) {
 }
 
 export default function OrdersDashboard() {
-  const [authenticated, setAuthenticated] = useState(false)
-  const [passwordInput, setPasswordInput] = useState('')
-  const [passwordError, setPasswordError] = useState(false)
+  const router = useRouter()
+  const [staff, setStaff] = useState<StaffInfo | null>(null)
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
@@ -120,30 +138,30 @@ export default function OrdersDashboard() {
   const lastOrderCount = useRef(0)
   const audioInitialized = useRef(false)
 
-  const [authLoading, setAuthLoading] = useState(true)
-
   useEffect(() => {
-    const verifyToken = async () => {
-      const stored = sessionStorage.getItem('orders_dashboard_token')
-      if (stored) {
-        try {
-          const res = await fetch(`/api/orders-login?token=${encodeURIComponent(stored)}`)
-          if (res.ok) {
-            setAuthenticated(true)
-            setAuthLoading(false)
-            return
-          }
-        } catch {}
-        sessionStorage.removeItem('orders_dashboard_token')
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/orders-login/me')
+        if (res.ok) {
+          const data = await res.json()
+          setStaff(data.staff)
+        } else {
+          router.push('/staff-login')
+        }
+      } catch {
+        router.push('/staff-login')
       }
-      setAuthLoading(false)
     }
-    verifyToken()
-  }, [])
+    checkAuth()
+  }, [router])
 
   const fetchOrders = useCallback(async () => {
     try {
       const res = await fetch('/api/orders')
+      if (res.status === 401) {
+        router.push('/staff-login')
+        return
+      }
       const data = await res.json()
       if (Array.isArray(data)) {
         if (!audioInitialized.current && data.length > lastOrderCount.current && lastOrderCount.current > 0) {
@@ -167,15 +185,15 @@ export default function OrdersDashboard() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [router])
 
   useEffect(() => {
-    if (!authenticated) return
+    if (!staff) return
     requestNotificationPermission()
     fetchOrders()
     const interval = setInterval(fetchOrders, 10000)
     return () => clearInterval(interval)
-  }, [authenticated, fetchOrders])
+  }, [staff, fetchOrders])
 
   const markAsViewed = useCallback(async () => {
     try {
@@ -184,102 +202,43 @@ export default function OrdersDashboard() {
   }, [])
 
   useEffect(() => {
-    if (authenticated && orders.length > 0) {
+    if (staff && orders.length > 0) {
       const unviewed = orders.some(o => !o.viewed)
       if (unviewed) {
         markAsViewed()
       }
     }
-  }, [authenticated, orders.length, markAsViewed])
+  }, [staff, orders.length, markAsViewed])
 
-  const handlePassword = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setPasswordError(false)
-    try {
-      const res = await fetch('/api/orders-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: passwordInput }),
-      })
-      if (res.ok) {
-        const data = await res.json()
-        sessionStorage.setItem('orders_dashboard_token', data.token)
-        setAuthenticated(true)
-        setPasswordInput('')
-      } else {
-        setPasswordError(true)
-      }
-    } catch {
-      setPasswordError(true)
-    }
-  }
-
-  const handleLogout = () => {
-    sessionStorage.removeItem('orders_dashboard_token')
-    setAuthenticated(false)
+  const handleLogout = async () => {
+    await fetch('/api/orders-login', { method: 'DELETE' })
+    setStaff(null)
     setOrders([])
     lastOrderCount.current = 0
+    router.push('/staff-login')
   }
 
   const updateOrderStatus = async (id: string, status: Order['status']) => {
     try {
-      await fetch('/api/orders', {
+      const res = await fetch('/api/orders', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status }),
       })
-      fetchOrders()
+      if (res.ok) {
+        fetchOrders()
+      }
     } catch {}
   }
 
   const pendingOrders = orders.filter(o => o.status === 'pending').length
   const confirmedOrders = orders.filter(o => o.status === 'confirmed').length
+  const canManage = staff?.role === 'admin' || staff?.role === 'manager'
 
-  if (authLoading) {
+  if (!staff) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    )
-  }
-
-  if (!authenticated) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4" dir="rtl">
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
-            <ShoppingBag className="w-10 h-10 text-primary" />
-          </div>
-          <h1 className="text-3xl font-display text-primary tracking-wide">لوحة الطلبات</h1>
-          <p className="text-foreground/60 text-sm mt-2">elsaly birket elsaba</p>
-        </div>
-        <form onSubmit={handlePassword} className="w-full max-w-sm space-y-4">
-          <div className="text-center space-y-2">
-            <h2 className="text-xl font-display text-foreground">تسجيل الدخول</h2>
-            <p className="text-muted-foreground text-sm">يرجى إدخال كلمة المرور</p>
-          </div>
-          <input
-            type="password"
-            value={passwordInput}
-            onChange={(e) => { setPasswordInput(e.target.value); setPasswordError(false) }}
-            placeholder="كلمة المرور"
-            autoFocus
-            className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-center text-lg"
-          />
-          {passwordError && (
-            <p className="text-destructive text-sm text-center flex items-center justify-center gap-2">
-              <AlertTriangle className="w-4 h-4" />
-              كلمة المرور غير صحيحة
-            </p>
-          )}
-          <button
-            type="submit"
-            disabled={!passwordInput}
-            className="w-full bg-primary hover:bg-primary/80 text-primary-foreground h-12 rounded-lg text-base font-medium disabled:opacity-50 cursor-pointer"
-          >
-            دخول
-          </button>
-        </form>
       </div>
     )
   }
@@ -302,7 +261,17 @@ export default function OrdersDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className="flex gap-2 text-xs flex-1 md:flex-none">
+            <div className="flex items-center gap-2 text-xs">
+              <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border ${ROLE_COLORS[staff.role] || ''}`}>
+                <Shield className="w-3 h-3" />
+                {ROLE_LABELS[staff.role] || staff.role}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-border text-muted-foreground bg-secondary/30">
+                <Mail className="w-3 h-3" />
+                <span dir="ltr">{staff.email}</span>
+              </span>
+            </div>
+            <div className="flex gap-2 text-xs">
               <div className="bg-secondary/50 rounded-lg px-3 py-2 text-center">
                 <p className="text-warning font-bold text-lg">{pendingOrders}</p>
                 <p className="text-muted-foreground">قيد الانتظار</p>
@@ -312,6 +281,15 @@ export default function OrdersDashboard() {
                 <p className="text-muted-foreground">مؤكد</p>
               </div>
             </div>
+            {staff.role === 'admin' && (
+              <button
+                onClick={() => router.push('/staff/manage')}
+                className="p-2 rounded-lg border border-border hover:bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                title="إدارة فريق العمل"
+              >
+                <Shield className="w-5 h-5" />
+              </button>
+            )}
             <button
               onClick={fetchOrders}
               className="p-2 rounded-lg border border-border hover:bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"

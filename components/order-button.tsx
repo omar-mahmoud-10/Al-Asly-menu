@@ -24,13 +24,19 @@ const orderTypeOptions: Record<string, { id: string; name: string; icon: any }[]
   ],
 }
 
+interface PriceOption {
+  label: string
+  price: number
+}
+
 interface OrderButtonProps {
   itemName: string
   itemPrice: number
   variant?: "table" | "card"
+  priceOptions?: PriceOption[]
 }
 
-export function OrderButton({ itemName, itemPrice, variant = "card" }: OrderButtonProps) {
+export function OrderButton({ itemName, itemPrice, variant = "card", priceOptions }: OrderButtonProps) {
   const { items, addItem, clearCart } = useCart()
   const { toast } = useToast()
   const [showSuccess, setShowSuccess] = useState(false)
@@ -42,12 +48,10 @@ export function OrderButton({ itemName, itemPrice, variant = "card" }: OrderButt
   const [customerName, setCustomerName] = useState("")
   const [customerAddress, setCustomerAddress] = useState("")
   const [customerPhone, setCustomerPhone] = useState("")
+  const [lastOption, setLastOption] = useState<string | null>(null)
   const id = `${itemName}-${itemPrice}`
 
-  const handleAdd = (e: React.MouseEvent<HTMLButtonElement>) => {
-    addItem(id, itemName, itemPrice)
-
-    const buttonEl = e.currentTarget
+  const triggerFlyAnimation = (buttonEl: HTMLElement | null) => {
     const cartEl = document.getElementById("header-cart-btn")
     if (buttonEl && cartEl) {
       const buttonRect = buttonEl.getBoundingClientRect()
@@ -82,7 +86,22 @@ export function OrderButton({ itemName, itemPrice, variant = "card" }: OrderButt
         outerEl.remove()
       })
     }
+  }
 
+  const handleAdd = (e: React.MouseEvent<HTMLButtonElement>) => {
+    addItem(id, itemName, itemPrice)
+    triggerFlyAnimation(e.currentTarget)
+    setLastOption(null)
+    setShowSuccess(true)
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
+  const handleAddOption = (label: string, price: number, e: React.MouseEvent<HTMLButtonElement>) => {
+    const optionId = `${itemName}-${label}`
+    const optionName = `${itemName} (${label})`
+    addItem(optionId, optionName, price)
+    triggerFlyAnimation(e.currentTarget)
+    setLastOption(label)
     setShowSuccess(true)
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
@@ -174,7 +193,20 @@ export function OrderButton({ itemName, itemPrice, variant = "card" }: OrderButt
     clearCart()
   }
 
-  const button = variant === "table" ? (
+  const button = priceOptions && variant === "table" ? (
+    <div className="flex flex-wrap gap-2 justify-center">
+      {priceOptions.map((opt) => (
+        <button
+          key={opt.label}
+          onClick={(e) => handleAddOption(opt.label, opt.price, e)}
+          className="inline-flex flex-col items-center border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground px-3 py-1.5 rounded-lg text-xs font-sans font-medium transition-colors cursor-pointer min-w-[60px]"
+        >
+          <span>{opt.label}</span>
+          <span className="text-[11px] opacity-80">{opt.price} ج</span>
+        </button>
+      ))}
+    </div>
+  ) : variant === "table" ? (
     <button
       onClick={handleAdd}
       className="inline-flex items-center gap-2 border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground px-5 py-2.5 rounded-lg text-sm font-sans font-medium transition-colors cursor-pointer"
@@ -206,7 +238,7 @@ export function OrderButton({ itemName, itemPrice, variant = "card" }: OrderButt
             <DialogTitle className="font-display text-2xl text-foreground mb-1">
               تمت الإضافة بنجاح ✓
             </DialogTitle>
-            <p className="text-muted-foreground text-sm mb-6">{itemName}</p>
+            <p className="text-muted-foreground text-sm mb-6">{lastOption ? `${itemName} (${lastOption})` : itemName}</p>
             <div className="flex flex-col gap-3 w-full">
               <Button
                 onClick={() => { setShowSuccess(false); setShowBranch(true) }}

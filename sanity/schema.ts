@@ -4,5 +4,6 @@ import branch from './schemaTypes/branch'
 import deliveryPrice from './schemaTypes/deliveryPrice'
 import siteSettings from './schemaTypes/siteSettings'
 import order from './schemaTypes/order'
+import staffMember from './schemaTypes/staffMember'
 
-export const schemaTypes = [category, menuItem, branch, deliveryPrice, siteSettings, order]
+export const schemaTypes = [category, menuItem, branch, deliveryPrice, siteSettings, order, staffMember]

@@ -10,6 +10,7 @@ export async function getMenuItems() {
     price,
     image,
     group,
+    priceOptions,
     "category": category->{
       _id,
       title,
@@ -39,6 +40,7 @@ export async function getMenuItemsByCategory(slug: string) {
       description,
       price,
       group,
+      priceOptions,
       image
     }
   }`
@@ -80,4 +82,46 @@ export async function getSiteSettings() {
     heroDescription
   }`
   return client.fetch(query)
+}
+
+export async function getStaffByEmail(email: string) {
+  const query = `*[_type == "staffMember" && email == $email][0] {
+    _id,
+    email,
+    role,
+    createdAt
+  }`
+  return client.fetch(query, { email })
+}
+
+export async function getAllStaff() {
+  const query = `*[_type == "staffMember"] | order(createdAt asc) {
+    _id,
+    email,
+    role,
+    createdAt
+  }`
+  return client.fetch(query)
+}
+
+export async function createStaffMember(data: {
+  email: string
+  role: 'admin' | 'manager' | 'staff'
+}) {
+  const { writeClient } = await import('./lib/client')
+  return writeClient.create({
+    _type: 'staffMember',
+    ...data,
+    createdAt: new Date().toISOString(),
+  })
+}
+
+export async function updateStaffRole(id: string, role: 'admin' | 'manager' | 'staff') {
+  const { writeClient } = await import('./lib/client')
+  return writeClient.patch(id).set({ role }).commit()
+}
+
+export async function deleteStaffMember(id: string) {
+  const { writeClient } = await import('./lib/client')
+  return writeClient.delete(id)
 }
