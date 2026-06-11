@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Amiri, Cairo, Rakkas } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { CartProvider } from '@/lib/cart-context'
+import { GoogleProvider } from '@/components/google-provider'
 import { Toaster } from '@/components/ui/toaster'
 import './globals.css'
 
@@ -42,7 +43,9 @@ export default function RootLayout({
     <html lang="ar" dir="rtl">
       <body className={`${amiri.variable} ${cairo.variable} ${rakkas.variable} font-sans antialiased`}>
         <CartProvider>
-          {children}
+          <GoogleProvider>
+            {children}
+          </GoogleProvider>
         </CartProvider>
         <Toaster />
         {process.env.NODE_ENV === 'production' && <Analytics />}

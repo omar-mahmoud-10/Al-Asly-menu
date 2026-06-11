@@ -7,17 +7,17 @@ export default async function StaffLayout({ children }: { children: React.ReactN
   const token = cookieStore.get('staff_token')?.value
 
   if (!token) {
-    redirect('/orderselaslybirketelsaba')
+    redirect('/orders')
   }
 
   const secret = process.env.SITE_AUTH_SECRET
   if (!secret) {
-    redirect('/orderselaslybirketelsaba')
+    redirect('/orders')
   }
 
   const payload = await verifyAndDecodeToken(token, secret)
   if (!payload) {
-    redirect('/orderselaslybirketelsaba')
+    redirect('/orders')
   }
 
   if (payload.role !== 'admin') {

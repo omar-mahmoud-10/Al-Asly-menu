@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Clock, MapPin, Phone, User, Package, Bike, Utensils, ShoppingBag, AlertTriangle, CheckCircle, Eye, ChevronDown, ChevronUp, Bell, LogOut, RefreshCw, Shield, Mail, Send, UserPlus } from 'lucide-react'
+import { GoogleLogin } from '@react-oauth/google'
+import { Clock, MapPin, Phone, User, Package, Bike, Utensils, ShoppingBag, AlertTriangle, CheckCircle, Eye, ChevronDown, ChevronUp, Bell, LogOut, RefreshCw, Shield, Mail } from 'lucide-react'
 
 interface OrderItem {
   id: string
@@ -136,7 +137,8 @@ export default function OrdersDashboard() {
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
   const [hasNewOrder, setHasNewOrder] = useState(false)
   const [authLoading, setAuthLoading] = useState(true)
-  const [showForm, setShowForm] = useState(false)
+  const [googleError, setGoogleError] = useState(false)
+  const [googleCredential, setGoogleCredential] = useState<string | null>(null)
   const [requestSent, setRequestSent] = useState(false)
   const [requestLoading, setRequestLoading] = useState(false)
   const [pendingRequests, setPendingRequests] = useState(0)
@@ -223,37 +225,39 @@ export default function OrdersDashboard() {
     }
   }, [staff, orders.length, markAsViewed])
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setEmailError(false)
-    setRequestLoading(true)
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    setGoogleError(false)
+    setGoogleCredential(credentialResponse.credential)
     try {
-      const loginRes = await fetch('/api/orders-login', {
+      const res = await fetch('/api/orders-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailInput.trim() }),
+        body: JSON.stringify({ googleToken: credentialResponse.credential }),
       })
-      if (loginRes.ok) {
-        const data = await loginRes.json()
+      if (res.ok) {
+        const data = await res.json()
         setStaff(data.staff)
-        setEmailInput('')
-        setRequestLoading(false)
-        return
-      }
-      const accessRes = await fetch('/api/access-request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailInput.trim() }),
-      })
-      if (accessRes.ok) {
-        setRequestSent(true)
-        setEmailInput('')
       } else {
-        setEmailError(true)
+        setGoogleError(true)
       }
     } catch {
-      setEmailError(true)
+      setGoogleError(true)
     }
+  }
+
+  const handleRequestAccess = async () => {
+    if (!googleCredential) return
+    setRequestLoading(true)
+    try {
+      const res = await fetch('/api/access-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ googleToken: googleCredential }),
+      })
+      if (res.ok) {
+        setRequestSent(true)
+      }
+    } catch {}
     setRequestLoading(false)
   }
 
@@ -299,74 +303,54 @@ export default function OrdersDashboard() {
           <p className="text-foreground/60 text-sm mt-2">elsaly birket elsaba</p>
         </div>
 
-        {!showForm ? (
-          <div className="w-full max-w-sm text-center space-y-6">
-            <div className="space-y-2">
-              <h2 className="text-xl font-display text-foreground">ليس لديك صلاحية الوصول</h2>
-              <p className="text-muted-foreground text-sm">
-                هذه الصفحة مخصصة لفريق العمل فقط. إذا كنت أحد الموظفين، يرجى طلب إذن الوصول من المدير.
-              </p>
-            </div>
-            <button
-              onClick={() => setShowForm(true)}
-              className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/80 text-primary-foreground h-12 rounded-lg text-base font-medium cursor-pointer"
-            >
-              <Send className="w-5 h-5" />
-              طلب إذن الوصول من المدير
-            </button>
+        <div className="w-full max-w-sm space-y-4">
+          <div className="text-center space-y-2">
+            <h2 className="text-xl font-display text-foreground">تسجيل الدخول</h2>
+            <p className="text-muted-foreground text-sm">سجل الدخول بحساب Google المصرح به</p>
           </div>
-        ) : requestSent ? (
-          <div className="w-full max-w-sm text-center space-y-4">
-            <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-6">
-              <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
-              <p className="text-green-400 text-base font-medium">تم إرسال طلب الوصول</p>
-              <p className="text-muted-foreground text-sm mt-1">سيتم مراجعة طلبك من قبل المدير</p>
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleEmailSubmit} className="w-full max-w-sm space-y-4">
-            <div className="text-center space-y-2">
-              <h2 className="text-xl font-display text-foreground">أدخل بريدك الإلكتروني</h2>
-              <p className="text-muted-foreground text-sm">سيتم إرسال طلب الوصول إلى المدير</p>
-            </div>
-            <input
-              type="email"
-              value={emailInput}
-              onChange={(e) => { setEmailInput(e.target.value); setEmailError(false) }}
-              placeholder="البريد الإلكتروني"
-              autoFocus
-              dir="ltr"
-              className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-center text-lg"
+
+          <div className="flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setGoogleError(true)}
+              theme="outline"
+              size="large"
+              text="signin_with"
+              shape="rectangular"
+              width={320}
             />
-            {emailError && (
-              <p className="text-destructive text-sm text-center flex items-center justify-center gap-2">
-                <AlertTriangle className="w-4 h-4" />
-                حدث خطأ في إرسال الطلب
+          </div>
+
+          {googleError && (
+            <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-4 text-center">
+              <p className="text-destructive text-sm">
+                ليس لديك صلاحية الدخول
               </p>
-            )}
-            <button
-              type="submit"
-              disabled={!emailInput || requestLoading}
-              className="w-full bg-primary hover:bg-primary/80 text-primary-foreground h-12 rounded-lg text-base font-medium disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
-            >
-              {requestLoading ? (
-                <div className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+              <p className="text-muted-foreground text-xs mt-1">
+                أرسل طلب وصول إلى المدير للحصول على الصلاحية
+              </p>
+              {requestSent ? (
+                <div className="mt-3 bg-green-500/10 border border-green-500/30 rounded-lg p-3">
+                  <p className="text-green-400 text-sm font-medium">✓ تم إرسال طلب الوصول</p>
+                  <p className="text-muted-foreground text-xs mt-1">سيتم مراجعة طلبك من قبل المدير</p>
+                </div>
               ) : (
-                <>
-                  <Send className="w-5 h-5" />
-                  إرسال طلب الوصول
-                </>
+                <button
+                  onClick={handleRequestAccess}
+                  disabled={requestLoading}
+                  className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/80 text-primary-foreground rounded-lg text-sm font-medium transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  {requestLoading ? (
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Mail className="w-4 h-4" />
+                  )}
+                  طلب صلاحية الدخول
+                </button>
               )}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowForm(false)}
-              className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-            >
-              رجوع
-            </button>
-          </form>
-        )}
+            </div>
+          )}
+        </div>
       </div>
     )
   }

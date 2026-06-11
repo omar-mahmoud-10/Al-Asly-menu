@@ -126,12 +126,13 @@ export async function deleteStaffMember(id: string) {
   return writeClient.delete(id)
 }
 
-export async function createAccessRequest(email: string) {
+export async function createAccessRequest(email: string, googleToken?: string) {
   const { writeClient } = await import('./lib/client')
   return writeClient.create({
     _type: 'accessRequest',
     email: email.toLowerCase().trim(),
     status: 'pending',
+    googleToken: googleToken || '',
     createdAt: new Date().toISOString(),
   })
 }
@@ -141,6 +142,7 @@ export async function getPendingAccessRequests() {
     _id,
     email,
     status,
+    googleToken,
     createdAt
   }`
   return client.fetch(query)

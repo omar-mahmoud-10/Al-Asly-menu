@@ -13,7 +13,7 @@ export default function UnauthorizedPage() {
           عذراً، ليس لديك صلاحية الوصول إلى هذه الصفحة. إذا كنت تعتقد أن هذا خطأ، يرجى التواصل مع المدير.
         </p>
         <Link
-          href="/orderselaslybirketelsaba"
+          href="/orders"
           className="inline-flex items-center gap-2 bg-primary hover:bg-primary/80 text-primary-foreground px-6 py-3 rounded-lg text-base font-medium transition-colors"
         >
           تسجيل الدخول بحساب مختلف

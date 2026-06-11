@@ -33,6 +33,7 @@ export default function StaffManagePage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
+  const [expandedToken, setExpandedToken] = useState<string | null>(null)
 
   const fetchRequests = async () => {
     try {
@@ -48,7 +49,7 @@ export default function StaffManagePage() {
     try {
       const res = await fetch('/api/staff')
       if (res.status === 401) {
-        router.push('/orderselaslybirketelsaba')
+        router.push('/orders')
         return
       }
       if (res.status === 403) {
@@ -179,7 +180,7 @@ export default function StaffManagePage() {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => router.push('/orderselaslybirketelsaba')}
+              onClick={() => router.push('/orders')}
               className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border hover:bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-sm"
             >
               <ArrowRight className="w-4 h-4" />
@@ -277,10 +278,21 @@ export default function StaffManagePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {requests.map((req: any) => (
+                  {requests.map((req: any) => {
+                    let tokenEmail = ''
+                    try {
+                      if (req.googleToken) {
+                        const payload = JSON.parse(atob(req.googleToken.split('.')[1]))
+                        tokenEmail = payload.email || ''
+                      }
+                    } catch {}
+                    return (
                     <tr key={req._id} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
                       <td className="px-4 py-3">
                         <span className="text-sm text-foreground" dir="ltr">{req.email}</span>
+                        {tokenEmail && tokenEmail !== req.email && (
+                          <p className="text-[10px] text-warning mt-0.5">موثق: {tokenEmail}</p>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-sm text-muted-foreground">
                         {new Date(req.createdAt).toLocaleDateString('ar-EG', {
@@ -290,6 +302,29 @@ export default function StaffManagePage() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
+                          {req.googleToken && (
+                            <>
+                              <button
+                                onClick={() => setExpandedToken(expandedToken === req._id ? null : req._id)}
+                                className="flex items-center gap-1 px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-lg text-xs hover:bg-blue-500/30 transition-colors cursor-pointer border border-blue-500/30"
+                                title="عرض رمز Google الموثق"
+                              >
+                                <Mail className="w-3.5 h-3.5" />
+                                التحقق
+                              </button>
+                              {expandedToken === req._id && (
+                                <div className="absolute top-0 left-0 right-0 z-10 mt-10 bg-card border border-border rounded-xl p-3 shadow-xl">
+                                  <p className="text-xs font-medium text-foreground mb-1">Google ID Token (موثق من Google)</p>
+                                  <code className="text-[10px] text-muted-foreground break-all select-all block max-h-28 overflow-y-auto">
+                                    {req.googleToken}
+                                  </code>
+                                  <p className="text-[10px] text-muted-foreground mt-1">
+                                    يمكنك التحقق من هذا الرمز عبر Google للتحقق من صحة البريد الإلكتروني
+                                  </p>
+                                </div>
+                              )}
+                            </>
+                          )}
                           <button
                             onClick={async () => {
                               setError(''); setSuccess('')
@@ -333,7 +368,7 @@ export default function StaffManagePage() {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                    )})}
                 </tbody>
               </table>
             </div>

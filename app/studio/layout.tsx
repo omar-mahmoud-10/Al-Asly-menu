@@ -14,17 +14,17 @@ export default async function StudioLayout({ children }: { children: React.React
   const token = cookieStore.get('staff_token')?.value
 
   if (!token) {
-    redirect('/orderselaslybirketelsaba')
+    redirect('/orders')
   }
 
   const secret = process.env.SITE_AUTH_SECRET
   if (!secret) {
-    redirect('/orderselaslybirketelsaba')
+    redirect('/orders')
   }
 
   const payload = await verifyAndDecodeToken(token, secret)
   if (!payload || payload.role !== 'admin') {
-    redirect('/orderselaslybirketelsaba')
+    redirect('/orders')
   }
 
   return <>{children}</>

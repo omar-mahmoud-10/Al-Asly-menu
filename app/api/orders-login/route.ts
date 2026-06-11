@@ -2,18 +2,28 @@ import { NextResponse } from 'next/server'
 import { createToken } from '@/lib/auth'
 import { getStaffFromRequest, setAuthCookie, clearAuthCookie } from '@/lib/auth-middleware'
 import { getStaffByEmail } from '@/sanity/queries'
+import { verifyGoogleToken } from '@/lib/google-auth'
 
 export async function POST(request: Request) {
   try {
-    const { email } = await request.json()
+    const body = await request.json()
+    let email: string
 
-    if (!email || typeof email !== 'string') {
+    if (body.googleToken) {
+      const payload = await verifyGoogleToken(body.googleToken)
+      if (!payload) {
+        return NextResponse.json({ error: 'فشل التحقق من حساب Google' }, { status: 401 })
+      }
+      email = payload.email
+    } else if (body.email) {
+      email = body.email.toLowerCase().trim()
+    } else {
       return NextResponse.json({ error: 'البريد الإلكتروني مطلوب' }, { status: 400 })
     }
 
-    const staff = await getStaffByEmail(email.toLowerCase().trim())
+    const staff = await getStaffByEmail(email)
     if (!staff) {
-      return NextResponse.json({ error: 'البريد الإلكتروني غير مصرح به' }, { status: 401 })
+      return NextResponse.json({ error: 'ليس لديك صلاحية الدخول', email }, { status: 401 })
     }
 
     const secret = process.env.SITE_AUTH_SECRET

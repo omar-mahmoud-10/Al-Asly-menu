@@ -1,22 +1,32 @@
 import { NextResponse } from 'next/server'
 import { getStaffByEmail, createAccessRequest } from '@/sanity/queries'
+import { verifyGoogleToken } from '@/lib/google-auth'
 
 export async function POST(request: Request) {
   try {
-    const { email } = await request.json()
+    const body = await request.json()
+    let email: string
+    let googleToken: string | undefined
 
-    if (!email || typeof email !== 'string') {
-      return NextResponse.json({ error: 'البريد الإلكتروني مطلوب' }, { status: 400 })
+    if (body.googleToken) {
+      const payload = await verifyGoogleToken(body.googleToken)
+      if (!payload) {
+        return NextResponse.json({ error: 'رمز Google غير صالح' }, { status: 400 })
+      }
+      email = payload.email
+      googleToken = body.googleToken
+    } else if (body.email) {
+      email = body.email.toLowerCase().trim()
+    } else {
+      return NextResponse.json({ error: 'البريد الإلكتروني أو رمز Google مطلوب' }, { status: 400 })
     }
 
-    const cleanEmail = email.toLowerCase().trim()
-
-    const existingStaff = await getStaffByEmail(cleanEmail)
+    const existingStaff = await getStaffByEmail(email)
     if (existingStaff) {
       return NextResponse.json({ error: 'هذا البريد لديه صلاحية بالفعل' }, { status: 409 })
     }
 
-    await createAccessRequest(cleanEmail)
+    await createAccessRequest(email, googleToken)
 
     return NextResponse.json({
       success: true,

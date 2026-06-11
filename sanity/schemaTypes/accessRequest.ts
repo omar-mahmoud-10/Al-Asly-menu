@@ -25,6 +25,12 @@ export default defineType({
       initialValue: 'pending',
     }),
     defineField({
+      name: 'googleToken',
+      title: 'رمز Google الموثق',
+      type: 'text',
+      description: 'Google ID token المقدم من المستخدم للتحقق من البريد الإلكتروني',
+    }),
+    defineField({
       name: 'createdAt',
       title: 'تاريخ الطلب',
       type: 'datetime',
