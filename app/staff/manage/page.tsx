@@ -48,7 +48,7 @@ export default function StaffManagePage() {
     try {
       const res = await fetch('/api/staff')
       if (res.status === 401) {
-        router.push('/staff-login')
+        router.push('/orderselaslybirketelsaba')
         return
       }
       if (res.status === 403) {
