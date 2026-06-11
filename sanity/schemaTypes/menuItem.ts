@@ -69,7 +69,7 @@ export default defineType({
         {
           type: 'object',
           fields: [
-            { name: 'label', type: 'string', title: 'المسمى', options: { list: ['ثمن', 'ربع', 'نصف', 'ثلاث ارباع', 'كيلو'] } },
+            { name: 'label', type: 'string', title: 'المسمى (مثال: ثمن, ربع, نصف, ثلاث ارباع, كيلو, 300جرام, ...)' },
             { name: 'price', type: 'number', title: 'السعر', validation: (Rule) => Rule.required().min(0) },
           ],
           preview: {
