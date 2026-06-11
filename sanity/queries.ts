@@ -125,3 +125,33 @@ export async function deleteStaffMember(id: string) {
   const { writeClient } = await import('./lib/client')
   return writeClient.delete(id)
 }
+
+export async function createAccessRequest(email: string) {
+  const { writeClient } = await import('./lib/client')
+  return writeClient.create({
+    _type: 'accessRequest',
+    email: email.toLowerCase().trim(),
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+  })
+}
+
+export async function getPendingAccessRequests() {
+  const query = `*[_type == "accessRequest" && status == "pending"] | order(createdAt desc) {
+    _id,
+    email,
+    status,
+    createdAt
+  }`
+  return client.fetch(query)
+}
+
+export async function approveAccessRequest(id: string) {
+  const { writeClient } = await import('./lib/client')
+  return writeClient.patch(id).set({ status: 'approved' }).commit()
+}
+
+export async function denyAccessRequest(id: string) {
+  const { writeClient } = await import('./lib/client')
+  return writeClient.patch(id).set({ status: 'denied' }).commit()
+}

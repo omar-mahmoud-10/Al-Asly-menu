@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ShoppingBag, Shield, Trash2, Plus, AlertTriangle, CheckCircle, ArrowRight, Mail, UserCog } from 'lucide-react'
+import { ShoppingBag, Shield, Trash2, Plus, AlertTriangle, CheckCircle, ArrowRight, Mail, UserCog, Send, Check, X } from 'lucide-react'
 
 interface StaffMember {
   _id: string
@@ -27,11 +27,22 @@ export default function StaffManagePage() {
   const router = useRouter()
   const [staffList, setStaffList] = useState<StaffMember[]>([])
   const [loading, setLoading] = useState(true)
+  const [requests, setRequests] = useState<any[]>([])
   const [newEmail, setNewEmail] = useState('')
   const [newRole, setNewRole] = useState<'admin' | 'manager' | 'staff'>('staff')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
+
+  const fetchRequests = async () => {
+    try {
+      const res = await fetch('/api/access-request/review')
+      if (res.ok) {
+        const data = await res.json()
+        if (Array.isArray(data)) setRequests(data)
+      }
+    } catch {}
+  }
 
   const fetchStaff = async () => {
     try {
@@ -57,6 +68,7 @@ export default function StaffManagePage() {
 
   useEffect(() => {
     fetchStaff()
+    fetchRequests()
   }, [])
 
   const handleAdd = async (e: React.FormEvent) => {
@@ -157,6 +169,12 @@ export default function StaffManagePage() {
             <div>
               <h1 className="text-2xl md:text-3xl font-display text-primary">إدارة فريق العمل</h1>
               <p className="text-muted-foreground text-sm">elsaly birket elsaba</p>
+          {requests.length > 0 && (
+            <p className="text-destructive text-xs mt-1 flex items-center gap-1">
+              <Send className="w-3 h-3" />
+              {requests.length} طلب وصول معلق
+            </p>
+          )}
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -238,6 +256,87 @@ export default function StaffManagePage() {
                 </button>
               </div>
             </form>
+          </div>
+        )}
+
+        {/* Pending Requests */}
+        {requests.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-lg font-display text-foreground mb-3 flex items-center gap-2">
+              <Send className="w-5 h-5 text-primary" />
+              طلبات وصول معلقة
+              <span className="text-xs bg-destructive/20 text-destructive px-2 py-0.5 rounded-full">{requests.length}</span>
+            </h2>
+            <div className="overflow-hidden rounded-xl border border-border">
+              <table className="w-full text-right">
+                <thead>
+                  <tr className="bg-secondary/50 border-b border-border">
+                    <th className="px-4 py-3 text-sm font-medium text-muted-foreground">البريد الإلكتروني</th>
+                    <th className="px-4 py-3 text-sm font-medium text-muted-foreground">تاريخ الطلب</th>
+                    <th className="px-4 py-3 text-sm font-medium text-muted-foreground">إجراءات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {requests.map((req: any) => (
+                    <tr key={req._id} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
+                      <td className="px-4 py-3">
+                        <span className="text-sm text-foreground" dir="ltr">{req.email}</span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                        {new Date(req.createdAt).toLocaleDateString('ar-EG', {
+                          year: 'numeric', month: 'short', day: 'numeric',
+                          hour: '2-digit', minute: '2-digit'
+                        })}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={async () => {
+                              setError(''); setSuccess('')
+                              const res = await fetch('/api/access-request/review', {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: req._id, action: 'approve' }),
+                              })
+                              if (res.ok) {
+                                setSuccess('تم قبول الطلب وإضافة العضو')
+                                fetchStaff(); fetchRequests()
+                              } else {
+                                const d = await res.json(); setError(d.error || 'فشل')
+                              }
+                            }}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-green-500/20 text-green-400 rounded-lg text-xs hover:bg-green-500/30 transition-colors cursor-pointer border border-green-500/30"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                            قبول
+                          </button>
+                          <button
+                            onClick={async () => {
+                              setError(''); setSuccess('')
+                              const res = await fetch('/api/access-request/review', {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: req._id, action: 'deny' }),
+                              })
+                              if (res.ok) {
+                                setSuccess('تم رفض الطلب')
+                                fetchRequests()
+                              } else {
+                                const d = await res.json(); setError(d.error || 'فشل')
+                              }
+                            }}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-destructive/10 text-destructive rounded-lg text-xs hover:bg-destructive/20 transition-colors cursor-pointer border border-destructive/30"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                            رفض
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 

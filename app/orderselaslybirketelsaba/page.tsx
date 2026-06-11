@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useRouter } from 'next/navigation'
-import { Clock, MapPin, Phone, User, Package, Bike, Utensils, ShoppingBag, AlertTriangle, CheckCircle, Eye, ChevronDown, ChevronUp, Bell, LogOut, RefreshCw, Shield, Mail } from 'lucide-react'
+import { Clock, MapPin, Phone, User, Package, Bike, Utensils, ShoppingBag, AlertTriangle, CheckCircle, Eye, ChevronDown, ChevronUp, Bell, LogOut, RefreshCw, Shield, Mail, Send, UserPlus } from 'lucide-react'
 
 interface OrderItem {
   id: string
@@ -129,37 +128,39 @@ function formatDate(iso: string) {
 }
 
 export default function OrdersDashboard() {
-  const router = useRouter()
   const [staff, setStaff] = useState<StaffInfo | null>(null)
+  const [emailInput, setEmailInput] = useState('')
+  const [emailError, setEmailError] = useState(false)
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
   const [hasNewOrder, setHasNewOrder] = useState(false)
+  const [authLoading, setAuthLoading] = useState(true)
+  const [requestSent, setRequestSent] = useState(false)
+  const [requestLoading, setRequestLoading] = useState(false)
+  const [pendingRequests, setPendingRequests] = useState(0)
   const lastOrderCount = useRef(0)
   const audioInitialized = useRef(false)
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const verifySession = async () => {
       try {
         const res = await fetch('/api/orders-login/me')
         if (res.ok) {
           const data = await res.json()
           setStaff(data.staff)
-        } else {
-          router.push('/staff-login')
         }
-      } catch {
-        router.push('/staff-login')
-      }
+      } catch {}
+      setAuthLoading(false)
     }
-    checkAuth()
-  }, [router])
+    verifySession()
+  }, [])
 
   const fetchOrders = useCallback(async () => {
     try {
       const res = await fetch('/api/orders')
       if (res.status === 401) {
-        router.push('/staff-login')
+        setStaff(null)
         return
       }
       const data = await res.json()
@@ -185,15 +186,26 @@ export default function OrdersDashboard() {
     } finally {
       setLoading(false)
     }
-  }, [router])
+  }, [])
+
+  const fetchPendingRequests = useCallback(async () => {
+    try {
+      const res = await fetch('/api/access-request/review')
+      if (res.ok) {
+        const data = await res.json()
+        if (Array.isArray(data)) setPendingRequests(data.length)
+      }
+    } catch {}
+  }, [])
 
   useEffect(() => {
     if (!staff) return
     requestNotificationPermission()
     fetchOrders()
+    if (staff.role === 'admin') fetchPendingRequests()
     const interval = setInterval(fetchOrders, 10000)
     return () => clearInterval(interval)
-  }, [staff, fetchOrders])
+  }, [staff, fetchOrders, fetchPendingRequests])
 
   const markAsViewed = useCallback(async () => {
     try {
@@ -210,12 +222,49 @@ export default function OrdersDashboard() {
     }
   }, [staff, orders.length, markAsViewed])
 
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setEmailError(false)
+    setRequestSent(false)
+    try {
+      const res = await fetch('/api/orders-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailInput.trim() }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setStaff(data.staff)
+        setEmailInput('')
+      } else {
+        setEmailError(true)
+      }
+    } catch {
+      setEmailError(true)
+    }
+  }
+
+  const handleRequestAccess = async () => {
+    setRequestLoading(true)
+    try {
+      const res = await fetch('/api/access-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailInput.trim() }),
+      })
+      if (res.ok) {
+        setRequestSent(true)
+        setEmailError(false)
+      }
+    } catch {}
+    setRequestLoading(false)
+  }
+
   const handleLogout = async () => {
     await fetch('/api/orders-login', { method: 'DELETE' })
     setStaff(null)
     setOrders([])
     lastOrderCount.current = 0
-    router.push('/staff-login')
   }
 
   const updateOrderStatus = async (id: string, status: Order['status']) => {
@@ -233,12 +282,80 @@ export default function OrdersDashboard() {
 
   const pendingOrders = orders.filter(o => o.status === 'pending').length
   const confirmedOrders = orders.filter(o => o.status === 'confirmed').length
-  const canManage = staff?.role === 'admin' || staff?.role === 'manager'
 
-  if (!staff) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (!staff) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4" dir="rtl">
+        <div className="text-center mb-8">
+          <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
+            <ShoppingBag className="w-10 h-10 text-primary" />
+          </div>
+          <h1 className="text-3xl font-display text-primary tracking-wide">لوحة الطلبات</h1>
+          <p className="text-foreground/60 text-sm mt-2">elsaly birket elsaba</p>
+        </div>
+        <form onSubmit={handleEmailSubmit} className="w-full max-w-sm space-y-4">
+          <div className="text-center space-y-2">
+            <h2 className="text-xl font-display text-foreground">تسجيل الدخول</h2>
+            <p className="text-muted-foreground text-sm">يرجى إدخال البريد الإلكتروني المصرح به</p>
+          </div>
+          <input
+            type="email"
+            value={emailInput}
+            onChange={(e) => { setEmailInput(e.target.value); setEmailError(false) }}
+            placeholder="البريد الإلكتروني"
+            autoFocus
+            dir="ltr"
+            className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-center text-lg"
+          />
+          {emailError && !requestSent && (
+            <div className="space-y-3">
+              <p className="text-destructive text-sm text-center flex items-center justify-center gap-2">
+                <AlertTriangle className="w-4 h-4" />
+                البريد الإلكتروني غير مصرح به
+              </p>
+              <button
+                type="button"
+                onClick={handleRequestAccess}
+                disabled={requestLoading}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-primary/50 text-primary hover:bg-primary/10 transition-colors text-sm font-medium cursor-pointer disabled:opacity-50"
+              >
+                {requestLoading ? (
+                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    طلب إذن الوصول من المدير
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+          {requestSent && (
+            <div className="text-center space-y-3">
+              <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
+                <p className="text-green-400 text-sm font-medium">تم إرسال طلب الوصول</p>
+                <p className="text-muted-foreground text-xs mt-1">سيتم مراجعة طلبك من قبل المدير</p>
+              </div>
+            </div>
+          )}
+          {!requestSent && (
+            <button
+              type="submit"
+              disabled={!emailInput}
+              className="w-full bg-primary hover:bg-primary/80 text-primary-foreground h-12 rounded-lg text-base font-medium disabled:opacity-50 cursor-pointer"
+            >
+              دخول
+            </button>
+          )}
+        </form>
       </div>
     )
   }
@@ -282,13 +399,18 @@ export default function OrdersDashboard() {
               </div>
             </div>
             {staff.role === 'admin' && (
-              <button
-                onClick={() => router.push('/staff/manage')}
-                className="p-2 rounded-lg border border-border hover:bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              <a
+                href="/staff/manage"
+                className="relative p-2 rounded-lg border border-border hover:bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors"
                 title="إدارة فريق العمل"
               >
                 <Shield className="w-5 h-5" />
-              </button>
+                {pendingRequests > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {pendingRequests}
+                  </span>
+                )}
+              </a>
             )}
             <button
               onClick={fetchOrders}
