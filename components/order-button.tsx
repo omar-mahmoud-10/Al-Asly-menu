@@ -49,6 +49,7 @@ export function OrderButton({ itemName, itemPrice, variant = "card", priceOption
   const [customerAddress, setCustomerAddress] = useState("")
   const [customerPhone, setCustomerPhone] = useState("")
   const [lastOption, setLastOption] = useState<string | null>(null)
+  const [sending, setSending] = useState(false)
   const id = `${itemName}-${itemPrice}`
 
   const triggerFlyAnimation = (buttonEl: HTMLElement | null) => {
@@ -158,7 +159,8 @@ export function OrderButton({ itemName, itemPrice, variant = "card", priceOption
   }, [selectedBranch, items, itemName, itemPrice, id, toast])
 
   const handleSendOrder = (orderType: string, name: string, address: string, phone: string) => {
-    if (!selectedBranch) return
+    if (!selectedBranch || sending) return
+    setSending(true)
     const allItems = items.length > 0
       ? items.map((item) => `${item.quantity} ${item.name}`).join("\n")
       : `1 ${itemName}`
@@ -181,7 +183,7 @@ export function OrderButton({ itemName, itemPrice, variant = "card", priceOption
 
     const message = `${header}\n\nالطلب:\n${allItems}${footer}`
     window.open(`https://wa.me/${selectedBranch.phone}?text=${encodeURIComponent(message)}`, "_blank")
-    saveOrderToDB(orderType, name, address, phone)
+    saveOrderToDB(orderType, name, address, phone).finally(() => setSending(false))
     setShowCustomerForm(false)
     setShowOrderType(false)
     setShowSuccess(false)
@@ -209,7 +211,7 @@ export function OrderButton({ itemName, itemPrice, variant = "card", priceOption
   ) : variant === "table" ? (
     <button
       onClick={handleAdd}
-      className="inline-flex items-center gap-2 border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground px-5 py-2.5 rounded-lg text-sm font-sans font-medium transition-colors cursor-pointer"
+      className="inline-flex items-center gap-1.5 border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground px-[17px] py-2.5 rounded-lg text-sm font-sans font-medium transition-colors cursor-pointer"
     >
       <Plus className="w-4 h-4" />
       أضف
@@ -361,10 +363,11 @@ export function OrderButton({ itemName, itemPrice, variant = "card", priceOption
                 }
               }}
               disabled={
+                sending ||
                 !customerName.trim() ||
                 (selectedOrderType?.id === "delivery" && (!customerAddress.trim() || !customerPhone.trim()))
               }
-              className="w-full bg-primary hover:bg-primary/80 text-primary-foreground h-12 text-base rounded-lg mt-2"
+              className="w-full bg-primary hover:bg-primary/80 text-primary-foreground h-12 text-base rounded-lg mt-2 disabled:opacity-50"
             >
               <MessageCircle className="w-5 h-5" />
               إرسال عبر واتساب

@@ -226,6 +226,7 @@ export default function OrdersDashboard() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deletingAll, setDeletingAll] = useState(false)
   const [pushStatus, setPushStatus] = useState<'loading' | 'subscribed' | 'denied' | 'unsupported' | 'error'>('loading')
+  const [tick, setTick] = useState(0)
   const lastOrderCount = useRef(0)
   const initialFetchDone = useRef(false)
 
@@ -299,8 +300,24 @@ export default function OrdersDashboard() {
     } catch {}
   }, [staff])
 
+  const sanitySubRef = useRef<{ unsubscribe: () => void } | null>(null)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const listenHeardRef = useRef(false)
+
   useEffect(() => {
     if (!staff) return
+
+    const startPoll = () => {
+      if (pollRef.current) return
+      pollRef.current = setInterval(fetchOrders, 3000)
+    }
+
+    const stopPoll = () => {
+      if (pollRef.current) {
+        clearInterval(pollRef.current)
+        pollRef.current = null
+      }
+    }
 
     const setupPush = async () => {
       if (!('Notification' in window) || !('PushManager' in window) || !('serviceWorker' in navigator)) {
@@ -331,11 +348,49 @@ export default function OrdersDashboard() {
     setupPush()
     fetchOrders()
     if (staff.role === 'admin') fetchPendingRequests()
-    const ordersInterval = setInterval(fetchOrders, 10000)
+
+    const fallbackTimer = setTimeout(startPoll, 2000)
+
+    const setupSanityListen = async () => {
+      try {
+        const mod = await import('next-sanity')
+        const sanity = mod.createClient({
+          projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
+          dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
+          apiVersion: '2024-01-01',
+          useCdn: false,
+        })
+
+        const obs = sanity.listen('*[_type == "order"]')
+        sanitySubRef.current = obs.subscribe({
+          next: () => {
+            listenHeardRef.current = true
+            clearTimeout(fallbackTimer)
+            stopPoll()
+            fetchOrders()
+          },
+          error: () => {
+            if (!listenHeardRef.current) startPoll()
+          },
+        })
+      } catch {
+        startPoll()
+      }
+    }
+
+    setupSanityListen()
+
     const sessionInterval = setInterval(refreshSession, 30000)
+
     return () => {
-      clearInterval(ordersInterval)
+      clearTimeout(fallbackTimer)
+      stopPoll()
+      if (sanitySubRef.current) {
+        sanitySubRef.current.unsubscribe()
+        sanitySubRef.current = null
+      }
       clearInterval(sessionInterval)
+      listenHeardRef.current = false
     }
   }, [staff, fetchOrders, fetchPendingRequests, refreshSession])
 
@@ -353,6 +408,17 @@ export default function OrdersDashboard() {
       }
     }
   }, [staff, orders.length, markAsViewed])
+
+  useEffect(() => {
+    const interval = setInterval(() => setTick(n => n + 1), 30000)
+    return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    const onShow = () => { if (document.visibilityState === 'visible') fetchOrders() }
+    document.addEventListener('visibilitychange', onShow)
+    return () => document.removeEventListener('visibilitychange', onShow)
+  }, [fetchOrders])
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
     setGoogleError(false)
@@ -453,16 +519,18 @@ export default function OrdersDashboard() {
             <p className="text-muted-foreground text-sm">سجل الدخول بحساب Google المصرح به</p>
           </div>
 
-          <div className="flex justify-center">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => setGoogleError(true)}
-              theme="outline"
-              size="large"
-              text="signin_with"
-              shape="rectangular"
-              width={320}
-            />
+          <div className="flex justify-center overflow-hidden">
+            <div className="scale-[0.85] sm:scale-100 origin-center">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => setGoogleError(true)}
+                theme="outline"
+                size="large"
+                text="signin_with"
+                shape="rectangular"
+                width={320}
+              />
+            </div>
           </div>
 
           {googleError && (
@@ -501,60 +569,69 @@ export default function OrdersDashboard() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      <div className="max-w-7xl mx-auto p-4 md:p-6">
+      <div className="max-w-7xl mx-auto p-2 sm:p-4 md:p-6 overflow-x-hidden">
         {/* Header */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <ShoppingBag className="w-8 h-8 text-primary" />
-              {hasNewOrder && (
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full animate-ping" />
-              )}
+        <div className="flex flex-col gap-3 mb-4 sm:mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <ShoppingBag className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
+                {hasNewOrder && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-destructive rounded-full animate-ping" />
+                )}
+              </div>
+              <div>
+                <h1 className="text-lg sm:text-2xl md:text-3xl font-display text-primary">لوحة الطلبات</h1>
+                <p className="text-muted-foreground text-[10px] sm:text-sm">elsaly birket elsaba</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-display text-primary">لوحة الطلبات</h1>
-              <p className="text-muted-foreground text-sm">elsaly birket elsaba</p>
+            <button
+              onClick={handleLogout}
+              className="p-1.5 sm:p-2 rounded-lg border border-border hover:bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              title="تسجيل الخروج"
+            >
+              <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+          </div>
+          <div className="flex items-center flex-wrap gap-1.5 sm:gap-2">
+            <span className={`inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md border text-[10px] sm:text-xs ${ROLE_COLORS[staff.role] || ''}`}>
+              <Shield className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+              {ROLE_LABELS[staff.role] || staff.role}
+            </span>
+            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md border border-border text-muted-foreground bg-secondary/30 text-[10px] sm:text-xs max-w-[140px] sm:max-w-none truncate">
+              <Mail className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" />
+              <span dir="ltr" className="truncate">{staff.email}</span>
+            </span>
+            <div className="flex gap-1 sm:gap-2 mr-auto">
+              <div className="bg-secondary/50 rounded-lg px-2 sm:px-3 py-1 sm:py-2 text-center">
+                <p className="text-warning font-bold text-sm sm:text-lg">{pendingOrders}</p>
+                <p className="text-muted-foreground text-[10px] sm:text-xs">قيد الانتظار</p>
+              </div>
+              <div className="bg-secondary/50 rounded-lg px-2 sm:px-3 py-1 sm:py-2 text-center">
+                <p className="text-primary font-bold text-sm sm:text-lg">{confirmedOrders}</p>
+                <p className="text-muted-foreground text-[10px] sm:text-xs">مؤكد</p>
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className="flex items-center gap-2 text-xs">
-              <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border ${ROLE_COLORS[staff.role] || ''}`}>
-                <Shield className="w-3 h-3" />
-                {ROLE_LABELS[staff.role] || staff.role}
-              </span>
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-border text-muted-foreground bg-secondary/30">
-                <Mail className="w-3 h-3" />
-                <span dir="ltr">{staff.email}</span>
-              </span>
-            </div>
-            <div className="flex gap-2 text-xs">
-              <div className="bg-secondary/50 rounded-lg px-3 py-2 text-center">
-                <p className="text-warning font-bold text-lg">{pendingOrders}</p>
-                <p className="text-muted-foreground">قيد الانتظار</p>
-              </div>
-              <div className="bg-secondary/50 rounded-lg px-3 py-2 text-center">
-                <p className="text-primary font-bold text-lg">{confirmedOrders}</p>
-                <p className="text-muted-foreground">مؤكد</p>
-              </div>
-            </div>
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {(staff.role === 'manager' || staff.role === 'admin') && orders.length > 0 && (
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className="p-2 rounded-lg border border-destructive/30 hover:bg-destructive/10 text-destructive/70 hover:text-destructive transition-colors cursor-pointer"
+                className="p-1.5 sm:p-2 rounded-lg border border-destructive/30 hover:bg-destructive/10 text-destructive/70 hover:text-destructive transition-colors cursor-pointer"
                 title="حذف جميع الطلبات"
               >
-                <Trash2 className="w-5 h-5" />
+                <Trash2 className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
               </button>
             )}
             {(staff.role === 'admin' || staff.role === 'manager') && (
               <a
                 href="/staff/manage"
-                className="relative p-2 rounded-lg border border-border hover:bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors"
+                className="relative p-1.5 sm:p-2 rounded-lg border border-border hover:bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors"
                 title="إدارة فريق العمل"
               >
-                <Shield className="w-5 h-5" />
+                <Shield className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
                 {staff.role === 'admin' && pendingRequests > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 sm:w-5 sm:h-5 bg-destructive text-destructive-foreground text-[8px] sm:text-[10px] font-bold rounded-full flex items-center justify-center">
                     {pendingRequests}
                   </span>
                 )}
@@ -569,7 +646,7 @@ export default function OrdersDashboard() {
                   }).catch(() => setPushStatus('error'))
                 }
               }}
-              className={`p-2 rounded-lg border transition-colors cursor-pointer ${
+              className={`p-1.5 sm:p-2 rounded-lg border transition-colors cursor-pointer ${
                 pushStatus === 'subscribed'
                   ? 'border-green-500/50 bg-green-500/10 text-green-400'
                   : pushStatus === 'denied'
@@ -580,31 +657,24 @@ export default function OrdersDashboard() {
               }`}
               title={
                 pushStatus === 'subscribed' ? 'الإشعارات مفعلة' :
-                pushStatus === 'denied' ? 'الإشعارات محظورة - غير الإعدادات من المتصفح' :
-                pushStatus === 'unsupported' ? 'المتصفح لا يدعم الإشعارات' :
-                pushStatus === 'error' ? 'فشل تفعيل الإشعارات - اضغط لإعادة المحاولة' :
-                'جاري تفعيل الإشعارات...'
+                pushStatus === 'denied' ? 'الإشعارات محظورة' :
+                pushStatus === 'unsupported' ? 'المتصفح لا يدعم' :
+                pushStatus === 'error' ? 'فشل التفعيل - اضغط لإعادة المحاولة' :
+                'جاري التفعيل...'
               }
             >
               {pushStatus === 'loading' ? (
-                <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                <div className="w-3.5 h-3.5 sm:w-5 sm:h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
               ) : (
-                <Bell className="w-5 h-5" />
+                <Bell className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
               )}
             </button>
             <button
               onClick={fetchOrders}
-              className="p-2 rounded-lg border border-border hover:bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-lg border border-border hover:bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               title="تحديث"
             >
-              <RefreshCw className="w-5 h-5" />
-            </button>
-            <button
-              onClick={handleLogout}
-              className="p-2 rounded-lg border border-border hover:bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-              title="تسجيل الخروج"
-            >
-              <LogOut className="w-5 h-5" />
+              <RefreshCw className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
@@ -632,128 +702,205 @@ export default function OrdersDashboard() {
             <p className="text-sm">عند إرسال طلب جديد سيظهر هنا</p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-border">
-            <table className="w-full text-right">
-              <thead>
-                <tr className="bg-secondary/50 border-b border-border">
-                  <th className="px-4 py-3 text-sm font-medium text-muted-foreground">#</th>
-                  <th className="px-4 py-3 text-sm font-medium text-muted-foreground">التاريخ</th>
-                  <th className="px-4 py-3 text-sm font-medium text-muted-foreground">الفرع</th>
-                  <th className="px-4 py-3 text-sm font-medium text-muted-foreground">النوع</th>
-                  <th className="px-4 py-3 text-sm font-medium text-muted-foreground">العميل</th>
-                  <th className="px-4 py-3 text-sm font-medium text-muted-foreground">التواصل</th>
-                  <th className="px-4 py-3 text-sm font-medium text-muted-foreground">الأصناف</th>
-                  <th className="px-4 py-3 text-sm font-medium text-muted-foreground">الإجمالي</th>
-                  <th className="px-4 py-3 text-sm font-medium text-muted-foreground">الحالة</th>
-                  <th className="px-4 py-3 text-sm font-medium text-muted-foreground">إجراء</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((order, idx) => {
-                  const OrderTypeIcon = ORDER_TYPE_ICONS[order.orderType] || ShoppingBag
-                  const isExpanded = expandedOrder === order.id
-                  return (
-                    <tr key={order.id} className={`border-b border-border/50 transition-colors ${
-                      order.status === 'confirmed' ? 'bg-green-950/40 hover:bg-green-950/60' : !order.viewed ? 'bg-primary/5 hover:bg-secondary/30' : 'hover:bg-secondary/30'
-                    }`}>
-                      <td className="px-4 py-3 text-sm text-foreground">
-                        <div className="flex items-center gap-2">
-                          {!order.viewed && <Eye className="w-3 h-3 text-primary" />}
-                          {idx + 1}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
-                        <div className="flex items-center gap-1.5">
-                          <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                          {formatDate(order.createdAt, serverTime)}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-foreground">
-                        <div className="flex items-center gap-1.5">
-                          <MapPin className="w-3.5 h-3.5 text-primary" />
-                          {order.branch}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        <div className="flex items-center gap-1.5">
-                          <OrderTypeIcon className="w-3.5 h-3.5 text-primary" />
-                          <span className="text-foreground">{order.orderType}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-foreground">
-                        <div className="flex items-center gap-1.5">
-                          <User className="w-3.5 h-3.5 text-muted-foreground" />
-                          {order.customerName || '—'}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-foreground">
-                        {order.customerPhone ? (
-                          <a href={`tel:${order.customerPhone}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
-                            <Phone className="w-3.5 h-3.5 text-muted-foreground" />
-                            {order.customerPhone}
-                          </a>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        <button
-                          onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
-                          className="flex items-center gap-1.5 text-primary hover:text-primary/80 transition-colors cursor-pointer"
-                        >
-                          {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                          {order.items.length} صنف
-                        </button>
-                        {isExpanded && (
-                          <div className="mt-2 bg-secondary/30 rounded-lg p-2 space-y-1">
-                            {order.items.map((item) => (
-                              <div key={item.id} className="text-xs text-foreground flex justify-between gap-4">
-                                <span>{item.name}</span>
-                                <span className="text-muted-foreground whitespace-nowrap">{item.quantity} × {item.price} ج</span>
-                              </div>
-                            ))}
-                            {order.customerAddress && (
-                              <div className="text-xs text-muted-foreground pt-1 border-t border-border/50 mt-1">
-                                <span>العنوان: {order.customerAddress}</span>
-                              </div>
-                            )}
+          <>
+            {/* Desktop table view */}
+            <div className="hidden md:block overflow-x-auto rounded-xl border border-border">
+              <table className="w-full text-right">
+                <thead>
+                  <tr className="bg-secondary/50 border-b border-border">
+                    <th className="px-1.5 sm:px-3 lg:px-4 py-2 sm:py-3 text-[10px] sm:text-sm font-medium text-muted-foreground">#</th>
+                    <th className="px-1.5 sm:px-3 lg:px-4 py-2 sm:py-3 text-[10px] sm:text-sm font-medium text-muted-foreground">التاريخ</th>
+                    <th className="px-1.5 sm:px-3 lg:px-4 py-2 sm:py-3 text-[10px] sm:text-sm font-medium text-muted-foreground">الفرع</th>
+                    <th className="px-1.5 sm:px-3 lg:px-4 py-2 sm:py-3 text-[10px] sm:text-sm font-medium text-muted-foreground">النوع</th>
+                    <th className="px-1.5 sm:px-3 lg:px-4 py-2 sm:py-3 text-[10px] sm:text-sm font-medium text-muted-foreground">العميل</th>
+                    <th className="px-1.5 sm:px-3 lg:px-4 py-2 sm:py-3 text-[10px] sm:text-sm font-medium text-muted-foreground">التواصل</th>
+                    <th className="px-1.5 sm:px-3 lg:px-4 py-2 sm:py-3 text-[10px] sm:text-sm font-medium text-muted-foreground">الأصناف</th>
+                    <th className="px-1.5 sm:px-3 lg:px-4 py-2 sm:py-3 text-[10px] sm:text-sm font-medium text-muted-foreground">الإجمالي</th>
+                    <th className="px-1.5 sm:px-3 lg:px-4 py-2 sm:py-3 text-[10px] sm:text-sm font-medium text-muted-foreground">الحالة</th>
+                    <th className="px-1.5 sm:px-3 lg:px-4 py-2 sm:py-3 text-[10px] sm:text-sm font-medium text-muted-foreground">إجراء</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((order, idx) => {
+                    const OrderTypeIcon = ORDER_TYPE_ICONS[order.orderType] || ShoppingBag
+                    const isExpanded = expandedOrder === order.id
+                    return (
+                      <tr key={order.id} className={`border-b border-border/50 transition-colors ${
+                        order.status === 'confirmed' ? 'bg-green-950/40 hover:bg-green-950/60' : !order.viewed ? 'bg-primary/5 hover:bg-secondary/30' : 'hover:bg-secondary/30'
+                      }`}>
+                        <td className="px-1.5 sm:px-3 lg:px-4 py-2 sm:py-3 text-xs sm:text-sm text-foreground">
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            {!order.viewed && <Eye className="w-2 h-2 sm:w-3 sm:h-3 text-primary" />}
+                            <span className="text-[11px] sm:text-sm">{idx + 1}</span>
                           </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-sm font-bold text-primary whitespace-nowrap">{order.totalPrice} جنيه</td>
-                      <td className="px-4 py-3 text-sm">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
+                        </td>
+                        <td className="px-1.5 sm:px-3 lg:px-4 py-2 sm:py-3 text-[11px] sm:text-sm text-foreground whitespace-nowrap">
+                          <div className="flex items-center gap-1 sm:gap-1.5">
+                            <Clock className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-muted-foreground shrink-0" />
+                            <span className="text-[10px] sm:text-sm">{formatDate(order.createdAt, serverTime)}</span>
+                          </div>
+                        </td>
+                        <td className="px-1.5 sm:px-3 lg:px-4 py-2 sm:py-3 text-[11px] sm:text-sm text-foreground">
+                          <div className="flex items-center gap-1 sm:gap-1.5">
+                            <MapPin className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-primary shrink-0" />
+                            <span className="truncate max-w-[60px] sm:max-w-none">{order.branch}</span>
+                          </div>
+                        </td>
+                        <td className="px-1.5 sm:px-3 lg:px-4 py-2 sm:py-3">
+                          <div className="flex items-center gap-1 sm:gap-1.5">
+                            <OrderTypeIcon className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-primary shrink-0" />
+                            <span className="text-[11px] sm:text-sm text-foreground">{order.orderType}</span>
+                          </div>
+                        </td>
+                        <td className="px-1.5 sm:px-3 lg:px-4 py-2 sm:py-3 text-[11px] sm:text-sm text-foreground">
+                          <div className="flex items-center gap-1 sm:gap-1.5">
+                            <User className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-muted-foreground shrink-0" />
+                            <span className="truncate max-w-[50px] sm:max-w-none">{order.customerName || '—'}</span>
+                          </div>
+                        </td>
+                        <td className="px-1.5 sm:px-3 lg:px-4 py-2 sm:py-3 text-[11px] sm:text-sm text-foreground">
+                          {order.customerPhone ? (
+                            <a href={`tel:${order.customerPhone}`} className="flex items-center gap-1 sm:gap-1.5 hover:text-primary transition-colors">
+                              <Phone className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-muted-foreground shrink-0" />
+                              <span className="text-[10px] sm:text-sm" dir="ltr">{order.customerPhone}</span>
+                            </a>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </td>
+                        <td className="px-1.5 sm:px-3 lg:px-4 py-2 sm:py-3">
+                          <button
+                            onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
+                            className="flex items-center gap-1 sm:gap-1.5 text-primary hover:text-primary/80 transition-colors cursor-pointer"
+                          >
+                            {isExpanded ? <ChevronUp className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" /> : <ChevronDown className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" />}
+                            <span className="text-[11px] sm:text-sm">{order.items.length} صنف</span>
+                          </button>
+                          {isExpanded && (
+                            <div className="mt-1 sm:mt-2 bg-secondary/30 rounded-lg p-1.5 sm:p-2 space-y-0.5 sm:space-y-1">
+                              {order.items.map((item) => (
+                                <div key={item.id} className="text-[10px] sm:text-xs text-foreground flex justify-between gap-2 sm:gap-4">
+                                  <span>{item.name}</span>
+                                  <span className="text-muted-foreground whitespace-nowrap">{item.quantity} × {item.price} ج</span>
+                                </div>
+                              ))}
+                              {order.customerAddress && (
+                                <div className="text-[10px] sm:text-xs text-muted-foreground pt-0.5 sm:pt-1 border-t border-border/50 mt-0.5 sm:mt-1">
+                                  <span>العنوان: {order.customerAddress}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-1.5 sm:px-3 lg:px-4 py-2 sm:py-3 text-[11px] sm:text-sm font-bold text-primary whitespace-nowrap">{order.totalPrice} جنيه</td>
+                        <td className="px-1.5 sm:px-3 lg:px-4 py-2 sm:py-3">
+                          <span className={`inline-flex items-center gap-1 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-xs font-medium ${
+                            order.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
+                            'bg-green-500/20 text-green-400 border border-green-500/30'
+                          }`}>
+                            {order.status === 'pending' ? <AlertTriangle className="w-2 h-2 sm:w-3 sm:h-3" /> : <CheckCircle className="w-2 h-2 sm:w-3 sm:h-3" />}
+                            {order.status === 'pending' ? 'بانتظار التأكيد' : 'مؤكد'}
+                          </span>
+                        </td>
+                        <td className="px-1.5 sm:px-3 lg:px-4 py-2 sm:py-3">
+                          {order.status === 'pending' && (
+                            <button
+                              onClick={() => updateOrderStatus(order.id, 'confirmed')}
+                              className="px-1.5 sm:px-3 py-1 sm:py-1.5 bg-green-500/20 text-green-400 rounded text-[9px] sm:text-xs hover:bg-green-500/30 transition-colors cursor-pointer border border-green-500/30 font-medium whitespace-nowrap"
+                            >
+                             تأكيد
+                            </button>
+                          )}
+                          {order.status === 'confirmed' && (
+                            <span className="text-green-500/60 text-[10px] sm:text-xs">✓</span>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile card view */}
+            <div className="block md:hidden space-y-2">
+              {orders.map((order, idx) => {
+                const OrderTypeIcon = ORDER_TYPE_ICONS[order.orderType] || ShoppingBag
+                const isExpanded = expandedOrder === order.id
+                return (
+                  <div key={order.id} className={`rounded-lg border border-border p-2 ${
+                    order.status === 'confirmed' ? 'bg-green-950/40' : !order.viewed ? 'bg-primary/5' : 'bg-secondary/10'
+                  }`}>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-1.5">
+                        {!order.viewed && <Eye className="w-2.5 h-2.5 text-primary" />}
+                        <span className="text-[11px] font-bold text-foreground">#{idx + 1}</span>
+                        <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[8px] font-medium ${
                           order.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
                           'bg-green-500/20 text-green-400 border border-green-500/30'
                         }`}>
-                          {order.status === 'pending' ? <AlertTriangle className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
+                          {order.status === 'pending' ? <AlertTriangle className="w-1.5 h-1.5" /> : <CheckCircle className="w-1.5 h-1.5" />}
                           {order.status === 'pending' ? 'بانتظار التأكيد' : 'مؤكد'}
                         </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm">
+                      </div>
+                      <span className="text-[8px] text-muted-foreground">{formatDate(order.createdAt, serverTime)}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[9px] text-foreground mb-1 flex-wrap">
+                      <span className="flex items-center gap-0.5"><MapPin className="w-2 h-2 text-primary" /> {order.branch}</span>
+                      <OrderTypeIcon className="w-2 h-2 text-primary" />
+                      <span>{order.orderType}</span>
+                      <span className="flex items-center gap-0.5"><User className="w-2 h-2 text-muted-foreground" /> {order.customerName || '—'}</span>
+                      {order.customerPhone && (
+                        <a href={`tel:${order.customerPhone}`} className="flex items-center gap-0.5 hover:text-primary">
+                          <Phone className="w-2 h-2 text-muted-foreground" /> {order.customerPhone}
+                        </a>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between pt-1 border-t border-border/50">
+                      <button
+                        onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
+                        className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors cursor-pointer"
+                      >
+                        {isExpanded ? <ChevronUp className="w-2.5 h-2.5" /> : <ChevronDown className="w-2.5 h-2.5" />}
+                        <span className="text-[9px]">{order.items.length} صنف</span>
+                      </button>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-primary">{order.totalPrice} جنيه</span>
                         {order.status === 'pending' && (
                           <button
                             onClick={() => updateOrderStatus(order.id, 'confirmed')}
-                            className="px-3 py-1.5 bg-green-500/20 text-green-400 rounded-lg text-xs hover:bg-green-500/30 transition-colors cursor-pointer border border-green-500/30 font-medium"
+                            className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-[9px] hover:bg-green-500/30 transition-colors cursor-pointer border border-green-500/30 font-medium"
                           >
-                           تأكيد الأوردر
+                            تأكيد
                           </button>
                         )}
-                        {order.status === 'confirmed' && (
-                          <span className="text-green-500/60 text-xs">✓ مؤكد</span>
+                      </div>
+                    </div>
+                    {isExpanded && (
+                      <div className="mt-1 bg-secondary/30 rounded p-1.5 space-y-0.5">
+                        {order.items.map((item) => (
+                          <div key={item.id} className="text-[9px] text-foreground flex justify-between">
+                            <span>{item.name}</span>
+                            <span className="text-muted-foreground whitespace-nowrap">{item.quantity} × {item.price} ج</span>
+                          </div>
+                        ))}
+                        {order.customerAddress && (
+                          <div className="text-[9px] text-muted-foreground pt-0.5 border-t border-border/50 mt-0.5">
+                            العنوان: {order.customerAddress}
+                          </div>
                         )}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </>
         )}
 
         {/* Auto-refresh info */}
         <p className="text-center text-xs text-muted-foreground mt-4">
-          يتم التحديث تلقائياً كل 10 ثوانٍ
+          الأوردرات الجديدة تظهر تلقائياً في الوقت الحقيقي
         </p>
       </div>
 

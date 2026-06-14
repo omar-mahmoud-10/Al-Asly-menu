@@ -37,6 +37,7 @@ export function CartSheet() {
   const [customerAddress, setCustomerAddress] = useState("")
   const [customerPhone, setCustomerPhone] = useState("")
   const [shouldWiggle, setShouldWiggle] = useState(false)
+  const [sending, setSending] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -113,10 +114,11 @@ export function CartSheet() {
   }, [selectedBranch, items, totalPrice, toast])
 
   const handleSendOrder = (orderType: string, name: string, address: string, phone: string) => {
-    if (!selectedBranch) return
+    if (!selectedBranch || sending) return
+    setSending(true)
     const message = buildMessage(selectedBranch.name, orderType, name, address, phone)
     window.open(`https://wa.me/${selectedBranch.phone}?text=${encodeURIComponent(message)}`, "_blank")
-    saveOrderToDB(orderType, name, address, phone)
+    saveOrderToDB(orderType, name, address, phone).finally(() => setSending(false))
     setShowCustomerForm(false)
     setShowOrderTypeDialog(false)
     setShowBranchDialog(false)
@@ -135,13 +137,13 @@ export function CartSheet() {
         <SheetTrigger asChild>
           <button
             id="header-cart-btn"
-            className={`relative w-16 h-16 rounded-full border-2 border-[#2B0003]/30 flex items-center justify-center text-[#2B0003] hover:bg-[#2B0003] hover:text-white transition-all duration-300 cursor-pointer ${
+            className={`relative w-14 h-14 sm:w-20 sm:h-20 rounded-full border-2 border-[#2B0003]/30 flex items-center justify-center text-[#2B0003] hover:bg-[#2B0003] hover:text-white transition-all duration-300 cursor-pointer ${
               shouldWiggle ? "animate-cart-bounce" : ""
             }`}
           >
-            <ShoppingCart className="w-7 h-7" />
+            <ShoppingCart className="w-6 h-6 sm:w-8 sm:h-8" />
             {totalItems > 0 && (
-              <Badge className={`absolute -top-1 -right-1 h-6 min-w-6 px-1.5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[12px] font-extrabold shadow-md border-2 border-white ${
+              <Badge className={`absolute -top-1.5 -right-1.5 sm:-top-1.5 sm:-right-1.5 h-5 min-w-5 sm:h-7 sm:min-w-7 px-1 sm:px-1.5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] sm:text-[13px] font-extrabold shadow-md border-[1.5px] sm:border-2 border-white ${
                 shouldWiggle ? "animate-badge-pop" : ""
               }`}>
                 {totalItems}
@@ -315,10 +317,11 @@ export function CartSheet() {
                 }
               }}
               disabled={
+                sending ||
                 !customerName.trim() ||
                 (selectedOrderType?.id === "delivery" && (!customerAddress.trim() || !customerPhone.trim()))
               }
-              className="w-full bg-primary hover:bg-primary/80 text-primary-foreground h-12 text-base rounded-lg mt-2"
+              className="w-full bg-primary hover:bg-primary/80 text-primary-foreground h-12 text-base rounded-lg mt-2 disabled:opacity-50"
             >
               <MessageCircle className="w-5 h-5" />
               إرسال عبر واتساب

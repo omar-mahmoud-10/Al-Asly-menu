@@ -52,8 +52,8 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
     : null
 
   return (
-    <section className={`px-4 sm:px-6 lg:px-8 bg-background min-h-screen ${activeCategory ? 'pt-4 pb-16' : 'py-16'}`}>
-      <div className="max-w-7xl mx-auto">
+    <section className={`px-4 sm:px-6 lg:px-8 bg-background min-h-screen overflow-x-hidden ${activeCategory ? 'pt-4 pb-16' : 'py-16'}`}>
+      <div className="max-w-4xl mx-auto">
         {!activeCategory && categories.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-12">
             {categories.map((category) => (
@@ -79,7 +79,7 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
             </button>
             <div className="flex items-start gap-4 mb-6">
               <div className="flex-1 min-w-0">
-                <h2 className="font-display text-3xl sm:text-4xl text-foreground">
+                <h2 className="font-display text-xl sm:text-2xl lg:text-4xl text-foreground break-words">
                   {activeCat.title}
                 </h2>
               </div>
@@ -99,13 +99,13 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
                 لا توجد عناصر في هذه الفئة
               </p>
             ) : (
-              <div className="overflow-x-auto rounded-2xl border border-border">
-                <table className="w-full min-w-[600px]">
+              <div className="rounded-2xl border border-border overflow-hidden">
+                <table className="w-full">
                   <thead>
                     <tr className="bg-white/5 border-b border-border">
-                      <th className="text-right py-4 px-6 font-display text-xl text-foreground">الصنف</th>
-                      <th className="text-right py-4 px-6 font-display text-xl text-foreground">السعر</th>
-                       <th className="text-center py-4 px-6 font-display text-xl text-foreground w-80">الطلب</th>
+                      <th className="text-right py-2 px-2 sm:py-4 sm:px-4 lg:px-6 font-display text-sm sm:text-lg lg:text-xl text-foreground">الصنف</th>
+                      <th className="text-right py-2 px-2 sm:py-4 sm:px-4 lg:px-6 font-display text-sm sm:text-lg lg:text-xl text-foreground">السعر</th>
+                       <th className="text-center py-2 px-2 sm:py-4 sm:px-4 lg:px-6 font-display text-sm sm:text-lg lg:text-xl text-foreground">الطلب</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -129,22 +129,22 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
                         const hasPriceOptions = item.priceOptions && item.priceOptions.length > 0
                         rows.push(
                           <tr key={item._id} className={`border-b border-border transition-colors hover:bg-white/5 ${isLast ? 'border-b-0' : ''}`}>
-                            <td className="py-5 px-6">
-                              <span className="font-sans text-lg text-foreground">{item.name}</span>
+                            <td className="py-3 px-2 sm:py-5 sm:px-4 lg:px-6">
+                              <span className="font-sans text-sm sm:text-lg text-foreground">{item.name}</span>
                               {item.description && (
                                 <DescriptionToggle description={item.description} />
                               )}
                             </td>
                             {hasPriceOptions ? (
-                              <td colSpan={2} className="py-5 px-6 text-center">
+                              <td colSpan={2} className="py-3 px-2 sm:py-5 sm:px-4 lg:px-6 text-center">
                                 <OrderButton itemName={item.name} itemPrice={item.price} variant="table" priceOptions={item.priceOptions} />
                               </td>
                             ) : (
                               <>
-                                <td className="py-5 px-6">
-                                  <span className="font-display text-xl text-primary">{item.price} جنيه</span>
+                                <td className="py-3 px-2 sm:py-5 sm:px-4 lg:px-6">
+                                  <span className="font-display text-sm sm:text-lg lg:text-xl text-primary">{item.price} جنيه</span>
                                 </td>
-                                <td className="py-5 px-6 text-center">
+                                <td className="py-3 px-2 sm:py-5 sm:px-4 lg:px-6 text-center">
                                   <OrderButton itemName={item.name} itemPrice={item.price} variant="table" />
                                 </td>
                               </>
@@ -158,8 +158,8 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
                         const isLastGroup = rowIndex + groupItems.length - 1 >= totalRows - 1
                         rows.push(
                           <tr key={`group-${groupName}`} className="bg-primary/5 border-b border-border">
-                            <td colSpan={3} className="py-3 px-6">
-                              <span className="font-display text-lg text-primary">{groupName}</span>
+                            <td colSpan={3} className="py-2 px-2 sm:py-3 sm:px-4 lg:px-6">
+                              <span className="font-display text-sm sm:text-lg text-primary">{groupName}</span>
                             </td>
                           </tr>
                         )
@@ -169,22 +169,22 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
                           const hasPriceOptions = item.priceOptions && item.priceOptions.length > 0
                           rows.push(
                             <tr key={item._id} className={`border-b border-border transition-colors hover:bg-white/5 ${isLast ? 'border-b-0' : ''}`}>
-                              <td className="py-5 px-6 pr-12">
-                                <span className="font-sans text-lg text-foreground">{item.name}</span>
+                              <td className="py-3 px-2 sm:py-5 sm:px-4 lg:px-6">
+                                <span className="font-sans text-sm sm:text-lg text-foreground">{item.name}</span>
                                 {item.description && (
                                   <DescriptionToggle description={item.description} />
                                 )}
                               </td>
                               {hasPriceOptions ? (
-                                <td colSpan={2} className="py-5 px-6 text-center">
+                                <td colSpan={2} className="py-3 px-2 sm:py-5 sm:px-4 lg:px-6 text-center">
                                   <OrderButton itemName={item.name} itemPrice={item.price} variant="table" priceOptions={item.priceOptions} />
                                 </td>
                               ) : (
                                 <>
-                                  <td className="py-5 px-6">
-                                    <span className="font-display text-xl text-primary">{item.price} جنيه</span>
+                                  <td className="py-3 px-2 sm:py-5 sm:px-4 lg:px-6">
+                                    <span className="font-display text-sm sm:text-lg lg:text-xl text-primary">{item.price} جنيه</span>
                                   </td>
-                                  <td className="py-5 px-6 text-center">
+                                  <td className="py-3 px-2 sm:py-5 sm:px-4 lg:px-6 text-center">
                                     <OrderButton itemName={item.name} itemPrice={item.price} variant="table" />
                                   </td>
                                 </>

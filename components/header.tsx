@@ -13,35 +13,35 @@ function TikTokIcon({ className }: { className?: string }) {
 
 export function Header() {
   return (
-    <header className="bg-white py-6">
+    <header className="bg-white py-4 sm:py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-center gap-6">
+        <div className="flex items-center justify-center gap-3 sm:gap-6">
             <a
               href="https://www.facebook.com/ElaslyResturant/?locale=ar_AR&_rdc=1&_rdr#"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-16 h-16 rounded-full border-2 border-[#2B0003]/30 flex items-center justify-center text-[#2B0003] hover:bg-[#2B0003] hover:text-white transition-all duration-300"
+              className="w-14 h-14 sm:w-20 sm:h-20 rounded-full border-2 border-[#2B0003]/30 flex items-center justify-center text-[#2B0003] hover:bg-[#2B0003] hover:text-white transition-all duration-300"
               aria-label="فيسبوك"
             >
-              <Facebook className="w-7 h-7" />
+              <Facebook className="w-6 h-6 sm:w-8 sm:h-8" />
             </a>
             <a
               href="https://www.instagram.com/elasly_resturant_/"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-16 h-16 rounded-full border-2 border-[#2B0003]/30 flex items-center justify-center text-[#2B0003] hover:bg-[#2B0003] hover:text-white transition-all duration-300"
+              className="w-14 h-14 sm:w-20 sm:h-20 rounded-full border-2 border-[#2B0003]/30 flex items-center justify-center text-[#2B0003] hover:bg-[#2B0003] hover:text-white transition-all duration-300"
               aria-label="انستغرام"
             >
-              <Instagram className="w-7 h-7" />
+              <Instagram className="w-6 h-6 sm:w-8 sm:h-8" />
             </a>
             <a
               href="https://www.tiktok.com/@alaslyrestaurant"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-16 h-16 rounded-full border-2 border-[#2B0003]/30 flex items-center justify-center text-[#2B0003] hover:bg-[#2B0003] hover:text-white transition-all duration-300"
+              className="w-14 h-14 sm:w-20 sm:h-20 rounded-full border-2 border-[#2B0003]/30 flex items-center justify-center text-[#2B0003] hover:bg-[#2B0003] hover:text-white transition-all duration-300"
               aria-label="تيك توك"
             >
-              <TikTokIcon className="w-7 h-7" />
+              <TikTokIcon className="w-6 h-6 sm:w-8 sm:h-8" />
             </a>
             <CartSheet />
         </div>

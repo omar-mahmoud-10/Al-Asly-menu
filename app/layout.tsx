@@ -25,12 +25,18 @@ export const metadata: Metadata = {
   title: 'منيو الأصلي',
   description: 'اكتشف أشهى المشويات الشرقية في الأصلي. شيش طاووق، كباب، ريش، وأطباق مشوية بأجود المكونات.',
   generator: 'v0.app',
+  manifest: '/manifest.json',
   icons: {
     icon: '/logo_metaTitle.jpg',
     apple: '/logo_metaTitle.jpg',
   },
   openGraph: {
     images: ['/logo_metaTitle.jpg'],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'الأصلي',
   },
 }
 

@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server'
 import { verifyAndDecodeToken, type StaffTokenPayload } from './auth'
+import { getStaffByEmail } from '@/sanity/queries'
 
 export interface StaffInfo {
   email: string
   role: 'admin' | 'manager' | 'staff'
   staffId: string
+  iat?: number
 }
 
 export function getTokenFromRequest(request: Request): string | null {
@@ -34,7 +36,16 @@ export async function getStaffFromRequest(request: Request): Promise<StaffInfo |
     email: payload.email,
     role: payload.role,
     staffId: payload.staffId,
+    iat: payload.iat,
   }
+}
+
+async function getCurrentStaff(staff: StaffInfo): Promise<{ email: string; role: string; _id: string } | null> {
+  const fiveMin = 5 * 60 * 1000
+  if (staff.iat && Date.now() - staff.iat < fiveMin) {
+    return { email: staff.email, role: staff.role, _id: staff.staffId }
+  }
+  return await getStaffByEmail(staff.email)
 }
 
 export async function requireStaff(
@@ -47,14 +58,19 @@ export async function requireStaff(
     return NextResponse.json({ error: 'غير مصرح به', message: 'يجب تسجيل الدخول أولاً' }, { status: 401 })
   }
 
+  const current = await getCurrentStaff(staff)
+  if (!current) {
+    return NextResponse.json({ error: 'غير مصرح به', message: 'الحساب غير موجود' }, { status: 401 })
+  }
+
   if (minimumRole) {
     const roleHierarchy: Record<string, number> = { staff: 0, manager: 1, admin: 2 }
-    if ((roleHierarchy[staff.role] ?? -1) < (roleHierarchy[minimumRole] ?? 0)) {
+    if ((roleHierarchy[current.role] ?? -1) < (roleHierarchy[minimumRole] ?? 0)) {
       return NextResponse.json({ error: 'غير مصرح به', message: 'لا تملك الصلاحية المطلوبة' }, { status: 403 })
     }
   }
 
-  return { staff }
+  return { staff: { email: current.email, role: current.role as StaffInfo['role'], staffId: current._id } }
 }
 
 export function setAuthCookie(response: NextResponse, token: string): void {

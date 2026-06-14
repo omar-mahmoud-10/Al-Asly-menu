@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       viewed: false,
     })
 
-    notifyNewOrder({
+    await notifyNewOrder({
       id: doc._id,
       customerName: body.customerName || '',
       branch: body.branch || '',
