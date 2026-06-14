@@ -7,6 +7,7 @@ import { schemaTypes } from './schema'
 export default defineConfig({
   name: 'yaqut-store',
   title: ' الأصلي',
+  basePath: '/studio',
   projectId: getProjectId() || '',
   dataset: getDataset(),
   plugins: [
