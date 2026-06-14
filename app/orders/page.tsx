@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { GoogleLogin } from '@react-oauth/google'
-import { Clock, MapPin, Phone, User, Package, Bike, Utensils, ShoppingBag, AlertTriangle, CheckCircle, Eye, ChevronDown, ChevronUp, Bell, LogOut, RefreshCw, Shield, Mail } from 'lucide-react'
+import { Clock, MapPin, Phone, User, Package, Bike, Utensils, ShoppingBag, AlertTriangle, CheckCircle, Eye, ChevronDown, ChevronUp, Bell, LogOut, RefreshCw, Shield, Mail, Trash2 } from 'lucide-react'
 
 interface OrderItem {
   id: string
@@ -79,45 +79,125 @@ function playNotificationSound() {
   } catch {}
 }
 
-function requestNotificationPermission() {
+let swRegistration: ServiceWorkerRegistration | null = null
+
+async function requestNotificationPermission() {
   if (!('Notification' in window)) return
   if (Notification.permission === 'default') {
-    Notification.requestPermission()
+    await Notification.requestPermission()
   }
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(() => {})
+    try {
+      const reg = await navigator.serviceWorker.register('/sw.js')
+      swRegistration = reg
+      await navigator.serviceWorker.ready
+    } catch (e) {
+      console.warn('Service worker registration failed:', e)
+    }
+  }
+}
+
+async function subscribeToPush(email: string) {
+  if (!('Notification' in window) || !('PushManager' in window) || !swRegistration) return
+  if (Notification.permission !== 'granted') return
+
+  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+  if (!publicKey) return
+
+  try {
+    const urlBase64ToUint8Array = (base64String: string) => {
+      const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+      const rawData = atob(base64)
+      const outputArray = new Uint8Array(rawData.length)
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i)
+      }
+      return outputArray
+    }
+
+    let subscription = await swRegistration.pushManager.getSubscription()
+    if (!subscription) {
+      subscription = await swRegistration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey),
+      })
+    }
+
+    await fetch('/api/push-subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        subscription: subscription.toJSON(),
+      }),
+    })
+  } catch (e) {
+    console.warn('Failed to subscribe to push:', e)
+  }
+}
+
+async function unsubscribeFromPush() {
+  if (!swRegistration) return
+  try {
+    const subscription = await swRegistration.pushManager.getSubscription()
+    if (subscription) {
+      await fetch('/api/push-unsubscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoint: subscription.endpoint }),
+      })
+      await subscription.unsubscribe()
+    }
+  } catch (e) {
+    console.warn('Failed to unsubscribe from push:', e)
   }
 }
 
 function showSystemNotification(title: string, body: string) {
-  const sendViaSW = () => {
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({ type: 'show-notification', title, body })
-      return true
-    }
-    return false
+  if (!('Notification' in window)) {
+    console.warn('Notification API not available')
+    return
   }
 
-  if (!('Notification' in window)) return
-  if (Notification.permission === 'granted') {
-    if (!sendViaSW()) {
+  const show = () => {
+    if (swRegistration && swRegistration.active) {
+      try {
+        swRegistration.active.postMessage({ type: 'show-notification', title, body })
+        return
+      } catch (e) {
+        console.warn('Failed to send notification via SW:', e)
+      }
+    }
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'show-notification', title, body })
+      return
+    }
+    try {
       new Notification(title, { body, icon: '/logo_metaTitle.jpg', tag: 'new-order', requireInteraction: true })
+    } catch (e) {
+      console.warn('Failed to show notification:', e)
     }
   }
-  if (Notification.permission === 'default') {
+
+  if (Notification.permission === 'granted') {
+    show()
+  } else if (Notification.permission === 'default') {
     Notification.requestPermission().then(perm => {
       if (perm === 'granted') {
-        if (!sendViaSW()) {
-          new Notification(title, { body, icon: '/logo_metaTitle.jpg', tag: 'new-order', requireInteraction: true })
-        }
+        show()
+      } else {
+        console.warn('Notification permission denied by user')
       }
     })
+  } else {
+    console.warn('Notification permission denied. Enable notifications in browser settings.')
   }
 }
 
-function formatDate(iso: string) {
+function formatDate(iso: string, serverTime?: string) {
   const d = new Date(iso)
-  const now = new Date()
+  const now = serverTime ? new Date(serverTime) : new Date()
   const diff = now.getTime() - d.getTime()
   const minutes = Math.floor(diff / 60000)
   const hours = Math.floor(diff / 3600000)
@@ -142,8 +222,12 @@ export default function OrdersDashboard() {
   const [requestSent, setRequestSent] = useState(false)
   const [requestLoading, setRequestLoading] = useState(false)
   const [pendingRequests, setPendingRequests] = useState(0)
+  const [serverTime, setServerTime] = useState<string | undefined>(undefined)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deletingAll, setDeletingAll] = useState(false)
+  const [pushStatus, setPushStatus] = useState<'loading' | 'subscribed' | 'denied' | 'unsupported' | 'error'>('loading')
   const lastOrderCount = useRef(0)
-  const audioInitialized = useRef(false)
+  const initialFetchDone = useRef(false)
 
   useEffect(() => {
     const verifySession = async () => {
@@ -166,9 +250,10 @@ export default function OrdersDashboard() {
         setStaff(null)
         return
       }
+      setServerTime(res.headers.get('X-Server-Time') || undefined)
       const data = await res.json()
       if (Array.isArray(data)) {
-        if (!audioInitialized.current && data.length > lastOrderCount.current && lastOrderCount.current > 0) {
+        if (initialFetchDone.current && data.length > lastOrderCount.current) {
           playNotificationSound()
           setHasNewOrder(true)
           setTimeout(() => setHasNewOrder(false), 5000)
@@ -181,6 +266,7 @@ export default function OrdersDashboard() {
             )
           })
         }
+        initialFetchDone.current = true
         lastOrderCount.current = data.length
         setOrders(data)
       }
@@ -201,14 +287,57 @@ export default function OrdersDashboard() {
     } catch {}
   }, [])
 
+  const refreshSession = useCallback(async () => {
+    try {
+      const res = await fetch('/api/orders-login/me')
+      if (res.ok) {
+        const data = await res.json()
+        if (data.staff && (data.staff.role !== staff?.role || data.staff.email !== staff?.email)) {
+          setStaff(data.staff)
+        }
+      }
+    } catch {}
+  }, [staff])
+
   useEffect(() => {
     if (!staff) return
-    requestNotificationPermission()
+
+    const setupPush = async () => {
+      if (!('Notification' in window) || !('PushManager' in window) || !('serviceWorker' in navigator)) {
+        setPushStatus('unsupported')
+        return
+      }
+      if (Notification.permission === 'denied') {
+        setPushStatus('denied')
+        return
+      }
+      try {
+        await requestNotificationPermission()
+        if (Notification.permission !== 'granted') {
+          setPushStatus('denied')
+          return
+        }
+        if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
+          setPushStatus('error')
+          return
+        }
+        await subscribeToPush(staff.email)
+        setPushStatus('subscribed')
+      } catch {
+        setPushStatus('error')
+      }
+    }
+
+    setupPush()
     fetchOrders()
     if (staff.role === 'admin') fetchPendingRequests()
-    const interval = setInterval(fetchOrders, 10000)
-    return () => clearInterval(interval)
-  }, [staff, fetchOrders, fetchPendingRequests])
+    const ordersInterval = setInterval(fetchOrders, 10000)
+    const sessionInterval = setInterval(refreshSession, 30000)
+    return () => {
+      clearInterval(ordersInterval)
+      clearInterval(sessionInterval)
+    }
+  }, [staff, fetchOrders, fetchPendingRequests, refreshSession])
 
   const markAsViewed = useCallback(async () => {
     try {
@@ -262,10 +391,12 @@ export default function OrdersDashboard() {
   }
 
   const handleLogout = async () => {
+    await unsubscribeFromPush()
     await fetch('/api/orders-login', { method: 'DELETE' })
     setStaff(null)
     setOrders([])
     lastOrderCount.current = 0
+    initialFetchDone.current = false
   }
 
   const updateOrderStatus = async (id: string, status: Order['status']) => {
@@ -279,6 +410,19 @@ export default function OrdersDashboard() {
         fetchOrders()
       }
     } catch {}
+  }
+
+  const handleDeleteAll = async () => {
+    setDeletingAll(true)
+    try {
+      const res = await fetch('/api/orders', { method: 'DELETE' })
+      if (res.ok) {
+        setOrders([])
+        lastOrderCount.current = 0
+      }
+    } catch {}
+    setDeletingAll(false)
+    setShowDeleteConfirm(false)
   }
 
   const pendingOrders = orders.filter(o => o.status === 'pending').length
@@ -393,20 +537,61 @@ export default function OrdersDashboard() {
                 <p className="text-muted-foreground">مؤكد</p>
               </div>
             </div>
-            {staff.role === 'admin' && (
+            {(staff.role === 'manager' || staff.role === 'admin') && orders.length > 0 && (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="p-2 rounded-lg border border-destructive/30 hover:bg-destructive/10 text-destructive/70 hover:text-destructive transition-colors cursor-pointer"
+                title="حذف جميع الطلبات"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
+            )}
+            {(staff.role === 'admin' || staff.role === 'manager') && (
               <a
                 href="/staff/manage"
                 className="relative p-2 rounded-lg border border-border hover:bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors"
                 title="إدارة فريق العمل"
               >
                 <Shield className="w-5 h-5" />
-                {pendingRequests > 0 && (
+                {staff.role === 'admin' && pendingRequests > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
                     {pendingRequests}
                   </span>
                 )}
               </a>
             )}
+            <button
+              onClick={() => {
+                if (pushStatus !== 'subscribed' && staff) {
+                  setPushStatus('loading')
+                  requestNotificationPermission().then(() => {
+                    if (staff) subscribeToPush(staff.email).then(() => setPushStatus('subscribed')).catch(() => setPushStatus('error'))
+                  }).catch(() => setPushStatus('error'))
+                }
+              }}
+              className={`p-2 rounded-lg border transition-colors cursor-pointer ${
+                pushStatus === 'subscribed'
+                  ? 'border-green-500/50 bg-green-500/10 text-green-400'
+                  : pushStatus === 'denied'
+                  ? 'border-destructive/30 bg-destructive/10 text-destructive'
+                  : pushStatus === 'error'
+                  ? 'border-yellow-500/30 bg-yellow-500/10 text-yellow-400'
+                  : 'border-border hover:bg-secondary/50 text-muted-foreground hover:text-foreground'
+              }`}
+              title={
+                pushStatus === 'subscribed' ? 'الإشعارات مفعلة' :
+                pushStatus === 'denied' ? 'الإشعارات محظورة - غير الإعدادات من المتصفح' :
+                pushStatus === 'unsupported' ? 'المتصفح لا يدعم الإشعارات' :
+                pushStatus === 'error' ? 'فشل تفعيل الإشعارات - اضغط لإعادة المحاولة' :
+                'جاري تفعيل الإشعارات...'
+              }
+            >
+              {pushStatus === 'loading' ? (
+                <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Bell className="w-5 h-5" />
+              )}
+            </button>
             <button
               onClick={fetchOrders}
               className="p-2 rounded-lg border border-border hover:bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
@@ -468,8 +653,8 @@ export default function OrdersDashboard() {
                   const OrderTypeIcon = ORDER_TYPE_ICONS[order.orderType] || ShoppingBag
                   const isExpanded = expandedOrder === order.id
                   return (
-                    <tr key={order.id} className={`border-b border-border/50 hover:bg-secondary/30 transition-colors ${
-                      order.status === 'confirmed' ? 'bg-green-950/40' : !order.viewed ? 'bg-primary/5' : ''
+                    <tr key={order.id} className={`border-b border-border/50 transition-colors ${
+                      order.status === 'confirmed' ? 'bg-green-950/40 hover:bg-green-950/60' : !order.viewed ? 'bg-primary/5 hover:bg-secondary/30' : 'hover:bg-secondary/30'
                     }`}>
                       <td className="px-4 py-3 text-sm text-foreground">
                         <div className="flex items-center gap-2">
@@ -480,7 +665,7 @@ export default function OrdersDashboard() {
                       <td className="px-4 py-3 text-sm text-foreground whitespace-nowrap">
                         <div className="flex items-center gap-1.5">
                           <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                          {formatDate(order.createdAt)}
+                          {formatDate(order.createdAt, serverTime)}
                         </div>
                       </td>
                       <td className="px-4 py-3 text-sm text-foreground">
@@ -571,6 +756,44 @@ export default function OrdersDashboard() {
           يتم التحديث تلقائياً كل 10 ثوانٍ
         </p>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-background border border-border rounded-2xl p-6 mx-4 max-w-sm w-full shadow-2xl">
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full bg-destructive/20 flex items-center justify-center mx-auto mb-4">
+                <Trash2 className="w-6 h-6 text-destructive" />
+              </div>
+              <h2 className="text-lg font-display text-foreground mb-2">حذف جميع الطلبات</h2>
+              <p className="text-muted-foreground text-sm mb-6">
+                هل أنت متأكد من حذف جميع الطلبات؟ لا يمكن التراجع عن هذا الإجراء.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={deletingAll}
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-border text-foreground hover:bg-secondary/50 transition-colors text-sm font-medium cursor-pointer disabled:opacity-50"
+                >
+                  إلغاء
+                </button>
+                <button
+                  onClick={handleDeleteAll}
+                  disabled={deletingAll}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors text-sm font-medium cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {deletingAll ? (
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
+                  حذف الكل
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

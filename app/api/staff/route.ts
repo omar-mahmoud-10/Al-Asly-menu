@@ -3,7 +3,7 @@ import { requireStaff } from '@/lib/auth-middleware'
 import { getAllStaff, createStaffMember, updateStaffRole, deleteStaffMember } from '@/sanity/queries'
 
 export async function GET(request: Request) {
-  const auth = await requireStaff(request, 'admin')
+  const auth = await requireStaff(request, 'manager')
   if (auth instanceof NextResponse) return auth
 
   try {

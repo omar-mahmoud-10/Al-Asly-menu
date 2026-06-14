@@ -4,6 +4,7 @@ import { getMenuItemsByCategory, getCategories } from "@/sanity/queries"
 import { urlForImage } from "@/sanity/lib/image"
 import { ArrowRight } from "lucide-react"
 import { OrderButton } from "@/components/order-button"
+import { DescriptionToggle } from "@/components/description-toggle"
 
 export async function generateStaticParams() {
   const categories = await getCategories()
@@ -58,8 +59,8 @@ export default async function CategoryPage({
             لا توجد عناصر في هذه الفئة
           </p>
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-border">
-            <table className="w-full">
+          <div className="overflow-x-auto rounded-2xl border border-border">
+            <table className="w-full min-w-[600px]">
               <thead>
                 <tr className="bg-white/5 border-b border-border">
                   <th className="text-right py-4 px-6 font-display text-xl text-foreground">الصنف</th>
@@ -91,7 +92,7 @@ export default async function CategoryPage({
                         <td className="py-5 px-6">
                           <span className="font-sans text-lg text-foreground">{item.name}</span>
                           {item.description && (
-                            <p className="text-sm text-muted-foreground mt-1 font-sans">{item.description}</p>
+                            <DescriptionToggle description={item.description} />
                           )}
                         </td>
                         {hasPriceOptions ? (
@@ -130,7 +131,7 @@ export default async function CategoryPage({
                           <td className="py-5 px-6 pr-12">
                             <span className="font-sans text-lg text-foreground">{item.name}</span>
                             {item.description && (
-                              <p className="text-sm text-muted-foreground mt-1 font-sans">{item.description}</p>
+                              <DescriptionToggle description={item.description} />
                             )}
                           </td>
                           {hasPriceOptions ? (

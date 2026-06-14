@@ -4,6 +4,7 @@ import { useState, useRef } from "react"
 import { ArrowRight } from "lucide-react"
 import { urlForImage } from "@/sanity/lib/image"
 import { OrderButton } from "@/components/order-button"
+import { DescriptionToggle } from "@/components/description-toggle"
 
 interface Category {
   _id: string
@@ -51,7 +52,7 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
     : null
 
   return (
-    <section className="py-16 px-4 sm:px-6 lg:px-8 bg-background min-h-screen">
+    <section className={`px-4 sm:px-6 lg:px-8 bg-background min-h-screen ${activeCategory ? 'pt-4 pb-16' : 'py-16'}`}>
       <div className="max-w-7xl mx-auto">
         {!activeCategory && categories.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-12">
@@ -69,15 +70,15 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
 
         {activeCategory && activeCat && (
           <>
+            <button
+              onClick={() => setActiveCategory("")}
+              className="inline-flex items-center gap-2 text-primary-foreground bg-primary/90 hover:bg-primary border border-primary/50 px-5 py-2.5 rounded-full transition-all mb-6 cursor-pointer font-medium text-sm shadow-lg shadow-primary/25"
+            >
+              <ArrowRight className="w-4 h-4" />
+              العودة إلى الأقسام
+            </button>
             <div className="flex items-start gap-4 mb-6">
               <div className="flex-1 min-w-0">
-                <button
-                  onClick={() => setActiveCategory("")}
-                  className="inline-flex items-center gap-2 text-primary border border-primary/30 hover:bg-primary/10 bg-primary/5 px-4 py-2 rounded-full transition-colors mb-3 cursor-pointer font-medium text-sm"
-                >
-                  <ArrowRight className="w-4 h-4" />
-                  العودة إلى الأقسام
-                </button>
                 <h2 className="font-display text-3xl sm:text-4xl text-foreground">
                   {activeCat.title}
                 </h2>
@@ -98,8 +99,8 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
                 لا توجد عناصر في هذه الفئة
               </p>
             ) : (
-              <div className="overflow-hidden rounded-2xl border border-border">
-                <table className="w-full">
+              <div className="overflow-x-auto rounded-2xl border border-border">
+                <table className="w-full min-w-[600px]">
                   <thead>
                     <tr className="bg-white/5 border-b border-border">
                       <th className="text-right py-4 px-6 font-display text-xl text-foreground">الصنف</th>
@@ -131,7 +132,7 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
                             <td className="py-5 px-6">
                               <span className="font-sans text-lg text-foreground">{item.name}</span>
                               {item.description && (
-                                <p className="text-sm text-muted-foreground mt-1 font-sans">{item.description}</p>
+                                <DescriptionToggle description={item.description} />
                               )}
                             </td>
                             {hasPriceOptions ? (
@@ -171,7 +172,7 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
                               <td className="py-5 px-6 pr-12">
                                 <span className="font-sans text-lg text-foreground">{item.name}</span>
                                 {item.description && (
-                                  <p className="text-sm text-muted-foreground mt-1 font-sans">{item.description}</p>
+                                  <DescriptionToggle description={item.description} />
                                 )}
                               </td>
                               {hasPriceOptions ? (

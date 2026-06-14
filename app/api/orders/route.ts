@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { client, writeClient } from '@/sanity/lib/client'
 import { groq } from 'next-sanity'
 import { requireStaff } from '@/lib/auth-middleware'
+import { deleteAllOrders } from '@/sanity/queries'
+import { notifyNewOrder } from '@/lib/push-notifications'
 
 export async function GET(request: NextRequest) {
   const auth = await requireStaff(request)
@@ -28,7 +30,9 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json(mapped)
+    const response = NextResponse.json(mapped)
+    response.headers.set('X-Server-Time', new Date().toISOString())
+    return response
   } catch (error: any) {
     console.error('Failed to fetch orders:', error)
     return NextResponse.json({ error: 'فشل جلب الطلبات', details: error?.message }, { status: 500 })
@@ -51,6 +55,15 @@ export async function POST(request: NextRequest) {
       createdAt: new Date().toISOString(),
       viewed: false,
     })
+
+    notifyNewOrder({
+      id: doc._id,
+      customerName: body.customerName || '',
+      branch: body.branch || '',
+      orderType: body.orderType || '',
+      totalPrice: body.totalPrice || 0,
+      items: body.items || [],
+    }).catch((e) => console.error('Push notification error:', e))
 
     return NextResponse.json({ id: doc._id }, { status: 201 })
   } catch (error: any) {
@@ -81,5 +94,18 @@ export async function PATCH(request: NextRequest) {
   } catch (error: any) {
     console.error('Failed to update order:', error)
     return NextResponse.json({ error: 'فشل تحديث الطلب', details: error?.message }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  const auth = await requireStaff(request, 'manager')
+  if (auth instanceof NextResponse) return auth
+
+  try {
+    await deleteAllOrders()
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    console.error('Failed to delete orders:', error)
+    return NextResponse.json({ error: 'فشل حذف الطلبات', details: error?.message }, { status: 500 })
   }
 }

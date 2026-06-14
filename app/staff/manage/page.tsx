@@ -34,6 +34,7 @@ export default function StaffManagePage() {
   const [success, setSuccess] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
   const [expandedToken, setExpandedToken] = useState<string | null>(null)
+  const [currentRole, setCurrentRole] = useState<'admin' | 'manager' | null>(null)
 
   const fetchRequests = async () => {
     try {
@@ -68,6 +69,16 @@ export default function StaffManagePage() {
   }
 
   useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const res = await fetch('/api/orders-login/me')
+        if (res.ok) {
+          const data = await res.json()
+          setCurrentRole(data.staff?.role || null)
+        }
+      } catch {}
+    }
+    fetchCurrentUser()
     fetchStaff()
     fetchRequests()
   }, [])
@@ -186,13 +197,15 @@ export default function StaffManagePage() {
               <ArrowRight className="w-4 h-4" />
               لوحة الطلبات
             </button>
-            <button
-              onClick={() => setShowAddForm(!showAddForm)}
-              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/80 text-primary-foreground rounded-lg text-sm font-medium transition-colors cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              إضافة عضو
-            </button>
+            {currentRole === 'admin' && (
+              <button
+                onClick={() => setShowAddForm(!showAddForm)}
+                className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/80 text-primary-foreground rounded-lg text-sm font-medium transition-colors cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                إضافة عضو
+              </button>
+            )}
           </div>
         </div>
 
@@ -261,7 +274,7 @@ export default function StaffManagePage() {
         )}
 
         {/* Pending Requests */}
-        {requests.length > 0 && (
+        {currentRole === 'admin' && requests.length > 0 && (
           <div className="mb-6">
             <h2 className="text-lg font-display text-foreground mb-3 flex items-center gap-2">
               <Send className="w-5 h-5 text-primary" />
@@ -403,15 +416,25 @@ export default function StaffManagePage() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <select
-                        value={member.role}
-                        onChange={(e) => handleRoleChange(member._id, e.target.value)}
-                        className="px-3 py-1.5 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                      >
-                        {ROLE_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>{opt.label}</option>
-                        ))}
-                      </select>
+                      {currentRole === 'admin' ? (
+                        <select
+                          value={member.role}
+                          onChange={(e) => handleRoleChange(member._id, e.target.value)}
+                          className="px-3 py-1.5 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                        >
+                          {ROLE_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border ${
+                          member.role === 'admin' ? 'text-red-400 border-red-500/30 bg-red-500/10' :
+                          member.role === 'manager' ? 'text-blue-400 border-blue-500/30 bg-blue-500/10' :
+                          'text-green-400 border-green-500/30 bg-green-500/10'
+                        }`}>
+                          {ROLE_LABELS[member.role]}
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-sm text-muted-foreground">
                       {new Date(member.createdAt).toLocaleDateString('ar-EG', {
@@ -421,13 +444,15 @@ export default function StaffManagePage() {
                       })}
                     </td>
                     <td className="px-4 py-3">
-                      <button
-                        onClick={() => handleDelete(member._id)}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-destructive/10 text-destructive rounded-lg text-xs hover:bg-destructive/20 transition-colors cursor-pointer border border-destructive/30"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        حذف
-                      </button>
+                      {currentRole === 'admin' && (
+                        <button
+                          onClick={() => handleDelete(member._id)}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-destructive/10 text-destructive rounded-lg text-xs hover:bg-destructive/20 transition-colors cursor-pointer border border-destructive/30"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          حذف
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -438,7 +463,7 @@ export default function StaffManagePage() {
 
         {/* Info */}
         <p className="text-center text-xs text-muted-foreground mt-4">
-          يمكن للمديرين فقط الوصول إلى هذه الصفحة
+          يمكن للمدراء والمشرفين الوصول إلى هذه الصفحة
         </p>
       </div>
     </div>

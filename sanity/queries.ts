@@ -126,6 +126,14 @@ export async function deleteStaffMember(id: string) {
   return writeClient.delete(id)
 }
 
+export async function deleteAllOrders() {
+  const { writeClient } = await import('./lib/client')
+  const ids = await client.fetch(groq`*[_type == "order"]._id`)
+  if (ids.length === 0) return
+  const transaction = ids.map((id: string) => writeClient.delete(id))
+  await writeClient.transaction(transaction).commit()
+}
+
 export async function createAccessRequest(email: string, googleToken?: string) {
   const { writeClient } = await import('./lib/client')
   return writeClient.create({

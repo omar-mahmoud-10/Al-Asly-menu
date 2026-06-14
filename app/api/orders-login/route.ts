@@ -60,7 +60,17 @@ export async function GET(request: Request) {
     return response
   }
 
-  return NextResponse.json({ valid: true, staff })
+  const fresh = await getStaffByEmail(staff.email)
+  if (!fresh) {
+    const response = NextResponse.json({ valid: false }, { status: 401 })
+    clearAuthCookie(response)
+    return response
+  }
+
+  return NextResponse.json({
+    valid: true,
+    staff: { email: fresh.email, role: fresh.role, id: fresh._id },
+  })
 }
 
 export async function DELETE(_request: Request) {
