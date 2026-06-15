@@ -3,6 +3,7 @@ import { Amiri, Cairo, Rakkas } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { CartProvider } from '@/lib/cart-context'
 import { GoogleProvider } from '@/components/google-provider'
+import { PwaRouter } from '@/components/pwa-router'
 import { Toaster } from '@/components/ui/toaster'
 import './globals.css'
 
@@ -50,7 +51,9 @@ export default function RootLayout({
       <body className={`${amiri.variable} ${cairo.variable} ${rakkas.variable} font-sans antialiased`}>
         <CartProvider>
           <GoogleProvider>
-            {children}
+            <PwaRouter>
+              {children}
+            </PwaRouter>
           </GoogleProvider>
         </CartProvider>
         <Toaster />

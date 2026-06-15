@@ -1,7 +1,7 @@
 {
-  "name": "elsaly birket elsaba - الأصلي",
+  "name": "الأصلي",
   "short_name": "الأصلي",
-  "description": "elsaly birket elsaba - منيو وطلبات الأصلي",
+  "description": "elsaly birket elsaba - منيو ولوحة الطلبات",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
