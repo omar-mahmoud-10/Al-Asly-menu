@@ -13,7 +13,7 @@ function TikTokIcon({ className }: { className?: string }) {
 
 export function Header() {
   return (
-    <header className="bg-white py-4 sm:py-6">
+    <header className="bg-white py-2 sm:py-4">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-center gap-3 sm:gap-6">
             <a
@@ -23,7 +23,7 @@ export function Header() {
               className="w-14 h-14 sm:w-20 sm:h-20 rounded-full border-2 border-[#2B0003]/30 flex items-center justify-center text-[#2B0003] hover:bg-[#2B0003] hover:text-white transition-all duration-300"
               aria-label="فيسبوك"
             >
-              <Facebook className="w-6 h-6 sm:w-8 sm:h-8" />
+              <Facebook className="w-8 h-8 sm:w-10 sm:h-10" />
             </a>
             <a
               href="https://www.instagram.com/elasly_resturant_/"
@@ -32,7 +32,7 @@ export function Header() {
               className="w-14 h-14 sm:w-20 sm:h-20 rounded-full border-2 border-[#2B0003]/30 flex items-center justify-center text-[#2B0003] hover:bg-[#2B0003] hover:text-white transition-all duration-300"
               aria-label="انستغرام"
             >
-              <Instagram className="w-6 h-6 sm:w-8 sm:h-8" />
+              <Instagram className="w-8 h-8 sm:w-10 sm:h-10" />
             </a>
             <a
               href="https://www.tiktok.com/@alaslyrestaurant"
@@ -41,7 +41,7 @@ export function Header() {
               className="w-14 h-14 sm:w-20 sm:h-20 rounded-full border-2 border-[#2B0003]/30 flex items-center justify-center text-[#2B0003] hover:bg-[#2B0003] hover:text-white transition-all duration-300"
               aria-label="تيك توك"
             >
-              <TikTokIcon className="w-6 h-6 sm:w-8 sm:h-8" />
+              <TikTokIcon className="w-8 h-8 sm:w-10 sm:h-10" />
             </a>
             <CartSheet />
         </div>

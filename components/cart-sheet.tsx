@@ -141,7 +141,7 @@ export function CartSheet() {
               shouldWiggle ? "animate-cart-bounce" : ""
             }`}
           >
-            <ShoppingCart className="w-6 h-6 sm:w-8 sm:h-8" />
+            <ShoppingCart className="w-8 h-8 sm:w-10 sm:h-10" />
             {totalItems > 0 && (
               <Badge className={`absolute -top-1.5 -right-1.5 sm:-top-1.5 sm:-right-1.5 h-5 min-w-5 sm:h-7 sm:min-w-7 px-1 sm:px-1.5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] sm:text-[13px] font-extrabold shadow-md border-[1.5px] sm:border-2 border-white ${
                 shouldWiggle ? "animate-badge-pop" : ""
