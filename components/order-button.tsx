@@ -21,6 +21,7 @@ const orderTypeOptions: Record<string, { id: string; name: string; icon: any }[]
   "فرع شبين الكوم": [
     { id: "takeaway", name: "تيك أواي", icon: Package },
     { id: "delivery", name: "دليفرى", icon: Bike },
+    { id: "dinein", name: "صالة", icon: Utensils },
   ],
 }
 
