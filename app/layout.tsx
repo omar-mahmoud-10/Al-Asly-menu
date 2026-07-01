@@ -5,7 +5,6 @@ import { CartProvider } from '@/lib/cart-context'
 import { GoogleProvider } from '@/components/google-provider'
 import { PwaRouter } from '@/components/pwa-router'
 import { Toaster } from '@/components/ui/toaster'
-import { Footer } from '@/components/footer'
 import './globals.css'
 
 const amiri = Amiri({
@@ -54,7 +53,6 @@ export default function RootLayout({
           <GoogleProvider>
             <PwaRouter>
               {children}
-              <Footer />
             </PwaRouter>
           </GoogleProvider>
         </CartProvider>
