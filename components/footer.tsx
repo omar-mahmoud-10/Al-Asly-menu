@@ -1,65 +1,72 @@
-"use client"
-
 import Image from "next/image"
-import { MapPin, Store, Phone, PhoneCall } from "lucide-react"
+import { MapPin, Phone, Clock, Store } from "lucide-react"
 
 export function Footer() {
   return (
-    <footer id="contact">
-      <div className="bg-foreground text-card py-5 px-4">
-        <div className="max-w-4xl mx-auto flex flex-col items-center">
+    <footer className="bg-card border-t border-border py-5 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex flex-col items-center mb-4">
           <Image
             src="/logo.jpg"
             alt="حاتي الأصلي"
             width={120}
             height={120}
-            className="h-24 w-24 sm:h-28 sm:w-28 rounded-full object-cover border-2 border-primary/20 mb-3"
+            className="h-20 w-20 sm:h-24 sm:w-24 rounded-full object-cover border-2 border-primary/20 mb-3"
           />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 w-full">
-            <div className="text-center sm:text-right">
-              <p className="font-bold text-card mb-0.5 flex items-center justify-center sm:justify-start gap-1.5 text-sm">
-                <Store className="w-4 h-4 text-primary shrink-0" /> الفرع الأول: بركة السبع غرب
-              </p>
-              <p className="text-card/70 text-xs flex items-center justify-center sm:justify-start gap-1 mb-1.5">
-                <MapPin className="w-3 h-3 shrink-0" /> بركة السبع غرب - طريق شبين الكوم
-              </p>
-              <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
-                <span dir="ltr" className="text-xs text-card/70">01061465200</span>
-                <a href="tel:01061465200" className="text-[10px] flex items-center gap-0.5 bg-blue-600 hover:bg-blue-700 text-white px-2 py-0.5 rounded-full transition-colors">
-                  <PhoneCall className="w-2.5 h-2.5" /> اتصال
-                </a>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <h3 className="font-display text-lg text-primary mb-3 flex items-center gap-2">
+              <Store className="w-4 h-4" /> فروعنا
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <p className="font-bold text-foreground mb-0.5">الفرع الأول: بركة السبع غرب</p>
+                <p className="text-muted-foreground text-sm flex items-center gap-2 mb-0.5">
+                  <Phone className="w-3 h-3 shrink-0" />
+                  <span dir="ltr">01061465200</span>
+                </p>
+                <p className="text-muted-foreground text-sm flex items-center gap-2 mb-0.5">
+                  <Phone className="w-3 h-3 shrink-0" />
+                  <span dir="ltr">01279547317</span>
+                </p>
+                <p className="text-muted-foreground text-sm flex items-start gap-2">
+                  <MapPin className="w-3 h-3 mt-1 shrink-0" />
+                  طريق شبين الكوم
+                </p>
               </div>
-              <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
-                <span dir="ltr" className="text-xs text-card/70">01279547317</span>
-                <a href="tel:01279547317" className="text-[10px] flex items-center gap-0.5 bg-blue-600 hover:bg-blue-700 text-white px-2 py-0.5 rounded-full transition-colors">
-                  <PhoneCall className="w-2.5 h-2.5" /> اتصال
-                </a>
-              </div>
-            </div>
-            <div className="text-center sm:text-right">
-              <p className="font-bold text-card mb-0.5 flex items-center justify-center sm:justify-start gap-1.5 text-sm">
-                <Store className="w-4 h-4 text-primary shrink-0" /> الفرع الثاني: بركة السبع شرق
-              </p>
-              <p className="text-card/70 text-xs flex items-center justify-center sm:justify-start gap-1 mb-1.5">
-                <MapPin className="w-3 h-3 shrink-0" /> بركة السبع شرق - موقف مصر
-              </p>
-              <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
-                <span dir="ltr" className="text-xs text-card/70">0482991771</span>
-                <a href="tel:0482991771" className="text-[10px] flex items-center gap-0.5 bg-blue-600 hover:bg-blue-700 text-white px-2 py-0.5 rounded-full transition-colors">
-                  <PhoneCall className="w-2.5 h-2.5" /> اتصال
-                </a>
-              </div>
-              <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
-                <span dir="ltr" className="text-xs text-card/70">01206170001</span>
-                <a href="tel:01206170001" className="text-[10px] flex items-center gap-0.5 bg-blue-600 hover:bg-blue-700 text-white px-2 py-0.5 rounded-full transition-colors">
-                  <PhoneCall className="w-2.5 h-2.5" /> اتصال
-                </a>
+              <div>
+                <p className="font-bold text-foreground mb-0.5">الفرع الثاني: بركة السبع شرق</p>
+                <p className="text-muted-foreground text-sm flex items-center gap-2 mb-0.5">
+                  <Phone className="w-3 h-3 shrink-0" />
+                  <span dir="ltr">0482991771</span>
+                </p>
+                <p className="text-muted-foreground text-sm flex items-center gap-2 mb-0.5">
+                  <Phone className="w-3 h-3 shrink-0" />
+                  <span dir="ltr">01206170001</span>
+                </p>
+                <p className="text-muted-foreground text-sm flex items-start gap-2">
+                  <MapPin className="w-3 h-3 mt-1 shrink-0" />
+                  موقف مصر
+                </p>
               </div>
             </div>
           </div>
-          <div className="text-center text-card/50 text-[10px] mt-3 border-t border-card/10 pt-2 w-full">
-            جميع أيام الأسبوع ٨:٣٠ ص - ١١:٠٠ م
+
+          <div>
+            <h3 className="font-display text-lg text-primary mb-3 flex items-center gap-2">
+              <Clock className="w-4 h-4" /> ساعات العمل
+            </h3>
+            <p className="font-bold text-foreground">جميع أيام الأسبوع</p>
+            <p className="text-muted-foreground">٩ صباحاً - ٥ فجراً</p>
           </div>
+        </div>
+
+        <div className="border-t border-border/50 mt-5 pt-4 text-center">
+          <p className="text-muted-foreground text-sm">
+            &copy; {new Date().getFullYear()} حاتي الأصلي. جميع الحقوق محفوظة.
+          </p>
         </div>
       </div>
     </footer>
