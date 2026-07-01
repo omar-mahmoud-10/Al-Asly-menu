@@ -52,7 +52,7 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
     : null
 
   return (
-    <section className={`px-4 sm:px-6 lg:px-8 bg-background min-h-screen overflow-x-hidden ${activeCategory ? 'pt-4 pb-16' : 'py-6'}`}>
+    <section className={`px-4 sm:px-6 lg:px-8 bg-background flex-1 overflow-x-hidden ${activeCategory ? 'pt-4 pb-16' : 'py-6'}`}>
       <div className="max-w-4xl mx-auto">
         {!activeCategory && categories.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-12">
