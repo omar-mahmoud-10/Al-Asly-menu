@@ -59,7 +59,7 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
             {categories.map((category) => (
               <button
                 key={category._id}
-                onClick={() => setActiveCategory(category._id)}
+                onClick={() => { setActiveCategory(category._id); window.scrollTo({ top: 0, behavior: "smooth" }) }}
                 className="font-display text-2xl sm:text-3xl py-6 px-6 rounded-xl text-center transition-all duration-300 border-2 border-border text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary cursor-pointer"
               >
                 {category.title}
@@ -71,7 +71,7 @@ export function MenuSection({ items, categories }: MenuSectionProps) {
         {activeCategory && activeCat && (
           <>
             <button
-              onClick={() => setActiveCategory("")}
+              onClick={() => { setActiveCategory(""); window.scrollTo({ top: 0, behavior: "smooth" }) }}
               className="inline-flex items-center gap-2 text-primary-foreground bg-primary/90 hover:bg-primary border border-primary/50 px-5 py-2.5 rounded-full transition-all mb-6 cursor-pointer font-medium text-sm shadow-lg shadow-primary/25"
             >
               <ArrowRight className="w-4 h-4" />
