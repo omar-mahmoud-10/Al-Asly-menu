@@ -131,17 +131,8 @@ export function OrderButton({ itemName, itemPrice, variant = "card", priceOption
   const handleOrderTypeSelect = (type: { id: string; name: string }) => {
     setSelectedOrderType(type)
     setShowOrderType(false)
-    setShowPayment(true)
-  }
-
-  const handlePaymentSelect = (payment: string) => {
-    setSelectedPayment(payment)
-    setShowPayment(false)
-    if (selectedOrderType?.id === "dinein") {
-      handleSendOrder(selectedOrderType.name, "", "", "")
-    } else {
-      setShowCustomerForm(true)
-    }
+    setShowCustomerForm(true)
+    setSelectedPayment("cash")
   }
 
   const saveOrderToDB = useCallback(async (orderType: string, name: string, address: string, phone: string) => {
@@ -331,34 +322,7 @@ export function OrderButton({ itemName, itemPrice, variant = "card", priceOption
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showPayment} onOpenChange={(o) => { setShowPayment(o); if (!o) { setShowPayment(false) } }}>
-        <DialogContent dir="rtl" className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle className="text-center font-display text-2xl">اختر طريقة الدفع</DialogTitle>
-            {selectedBranch && selectedOrderType && (
-              <p className="text-center text-muted-foreground text-sm mt-1">
-                {selectedBranch.name} - {selectedOrderType.name}
-              </p>
-            )}
-          </DialogHeader>
-          <div className="flex flex-col gap-3 py-4">
-            <Button
-              onClick={() => handlePaymentSelect("cash")}
-              className="w-full bg-primary hover:bg-primary/80 text-primary-foreground h-14 text-base rounded-lg"
-            >
-              نقدا
-            </Button>
-            <Button
-              onClick={() => handlePaymentSelect("instapay")}
-              className="w-full bg-primary hover:bg-primary/80 text-primary-foreground h-14 text-base rounded-lg"
-            >
-              انستا باي
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showCustomerForm} onOpenChange={(o) => { setShowCustomerForm(o); if (!o) { setSelectedOrderType(null); setSelectedBranch(null) } }}>
+      <Dialog open={showCustomerForm} onOpenChange={(o) => { setShowCustomerForm(o); if (!o) { setSelectedOrderType(null); setSelectedBranch(null); setSelectedPayment(null) } }}>
         <DialogContent dir="rtl" className="sm:max-w-[420px]">
           <DialogHeader>
             <DialogTitle className="text-center font-display text-2xl">
@@ -416,6 +380,31 @@ export function OrderButton({ itemName, itemPrice, variant = "card", priceOption
                 </p>
               </>
             )}
+            <div className="border-t border-border pt-3">
+              <label className="block text-sm font-medium text-foreground mb-2">طريقة الدفع</label>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setSelectedPayment("cash")}
+                  className={`flex-1 py-2.5 rounded-lg text-sm font-medium border-2 transition-all cursor-pointer ${
+                    selectedPayment === "cash"
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-background text-foreground hover:border-primary/50"
+                  }`}
+                >
+                  نقدا
+                </button>
+                <button
+                  onClick={() => setSelectedPayment("instapay")}
+                  className={`flex-1 py-2.5 rounded-lg text-sm font-medium border-2 transition-all cursor-pointer ${
+                    selectedPayment === "instapay"
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-background text-foreground hover:border-primary/50"
+                  }`}
+                >
+                  انستا باي
+                </button>
+              </div>
+            </div>
             <Button
               onClick={() => {
                 if (selectedOrderType) {
