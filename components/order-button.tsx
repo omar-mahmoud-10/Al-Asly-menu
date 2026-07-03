@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useCallback } from "react"
+import React, { useState, useCallback, useEffect } from "react"
 import { Plus, ShoppingCart, Check, MessageCircle, Utensils, Package, Bike } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -51,7 +51,21 @@ export function OrderButton({ itemName, itemPrice, variant = "card", priceOption
   const [customerPhone, setCustomerPhone] = useState("")
   const [lastOption, setLastOption] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
+  const [showPayment, setShowPayment] = useState(false)
+  const [selectedPayment, setSelectedPayment] = useState<string | null>(null)
+  const [savedCustomer, setSavedCustomer] = useState<{ name: string; address: string; phone: string } | null>(null)
   const id = `${itemName}-${itemPrice}`
+
+  useEffect(() => {
+    if (showCustomerForm) {
+      const saved = localStorage.getItem("customerData")
+      if (saved) {
+        try { setSavedCustomer(JSON.parse(saved)) } catch { setSavedCustomer(null) }
+      } else {
+        setSavedCustomer(null)
+      }
+    }
+  }, [showCustomerForm])
 
   const triggerFlyAnimation = (buttonEl: HTMLElement | null) => {
     const cartEl = document.getElementById("header-cart-btn")
@@ -117,8 +131,14 @@ export function OrderButton({ itemName, itemPrice, variant = "card", priceOption
   const handleOrderTypeSelect = (type: { id: string; name: string }) => {
     setSelectedOrderType(type)
     setShowOrderType(false)
-    if (type.id === "dinein") {
-      handleSendOrder(type.name, "", "", "")
+    setShowPayment(true)
+  }
+
+  const handlePaymentSelect = (payment: string) => {
+    setSelectedPayment(payment)
+    setShowPayment(false)
+    if (selectedOrderType?.id === "dinein") {
+      handleSendOrder(selectedOrderType.name, "", "", "")
     } else {
       setShowCustomerForm(true)
     }
@@ -169,27 +189,31 @@ export function OrderButton({ itemName, itemPrice, variant = "card", priceOption
       ? items.reduce((sum, i) => sum + i.price * i.quantity, 0)
       : itemPrice
 
+    const paymentLine = selectedPayment === "instapay" ? "\nطريقة الدفع: انستا باي" : ""
     let header = ""
     let footer = ""
     if (orderType === "تيك أواي") {
-      header = `السلام عليكم ورحمة الله وبركاته،\nعاوز أطلب استلام من ${selectedBranch.name}\nالاسم: ${name}`
+      header = `السلام عليكم ورحمة الله وبركاته،\nعاوز أطلب استلام من ${selectedBranch.name}\nالاسم: ${name}${paymentLine}`
       footer = `\n\nالمجموع: ${total} جنيه\nيا ريت تأكديلي سعر الأوردر كام؟`
     } else if (orderType === "دليفرى") {
-      header = `السلام عليكم ورحمة الله وبركاته،\nعاوز أطلب توصيل من ${selectedBranch.name}\nالاسم: ${name}\nالعنوان: ${address}\nرقم التليفون: ${phone}`
+      header = `السلام عليكم ورحمة الله وبركاته،\nعاوز أطلب توصيل من ${selectedBranch.name}\nالاسم: ${name}\nالعنوان: ${address}\nرقم التليفون: ${phone}${paymentLine}`
       footer = `\n\nالمجموع: ${total} جنيه\nيا ريت تأكديلي سعر الأوردر كام وسعر التوصيل كام؟`
     } else {
-      header = `السلام عليكم ورحمة الله وبركاته،\nعاوز أطلب صالة من ${selectedBranch.name}`
+      header = `السلام عليكم ورحمة الله وبركاته،\nعاوز أطلب صالة من ${selectedBranch.name}${paymentLine}`
       footer = `\n\nالمجموع: ${total} جنيه\nيا ريت تأكديلي سعر الأوردر كام؟`
     }
 
     const message = `${header}\n\nالطلب:\n${allItems}${footer}`
     window.open(`https://wa.me/${selectedBranch.phone}?text=${encodeURIComponent(message)}`, "_blank")
     saveOrderToDB(orderType, name, address, phone).finally(() => setSending(false))
+    if (name) localStorage.setItem("customerData", JSON.stringify({ name, address, phone }))
     setShowCustomerForm(false)
     setShowOrderType(false)
+    setShowPayment(false)
     setShowSuccess(false)
     setSelectedBranch(null)
     setSelectedOrderType(null)
+    setSelectedPayment(null)
     setCustomerName("")
     setCustomerAddress("")
     setCustomerPhone("")
@@ -307,6 +331,33 @@ export function OrderButton({ itemName, itemPrice, variant = "card", priceOption
         </DialogContent>
       </Dialog>
 
+      <Dialog open={showPayment} onOpenChange={(o) => { setShowPayment(o); if (!o) { setShowPayment(false) } }}>
+        <DialogContent dir="rtl" className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="text-center font-display text-2xl">اختر طريقة الدفع</DialogTitle>
+            {selectedBranch && selectedOrderType && (
+              <p className="text-center text-muted-foreground text-sm mt-1">
+                {selectedBranch.name} - {selectedOrderType.name}
+              </p>
+            )}
+          </DialogHeader>
+          <div className="flex flex-col gap-3 py-4">
+            <Button
+              onClick={() => handlePaymentSelect("cash")}
+              className="w-full bg-primary hover:bg-primary/80 text-primary-foreground h-14 text-base rounded-lg"
+            >
+              نقدا
+            </Button>
+            <Button
+              onClick={() => handlePaymentSelect("instapay")}
+              className="w-full bg-primary hover:bg-primary/80 text-primary-foreground h-14 text-base rounded-lg"
+            >
+              انستا باي
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={showCustomerForm} onOpenChange={(o) => { setShowCustomerForm(o); if (!o) { setSelectedOrderType(null); setSelectedBranch(null) } }}>
         <DialogContent dir="rtl" className="sm:max-w-[420px]">
           <DialogHeader>
@@ -320,6 +371,14 @@ export function OrderButton({ itemName, itemPrice, variant = "card", priceOption
             )}
           </DialogHeader>
           <div className="flex flex-col gap-4 py-4">
+            {savedCustomer && (
+              <button
+                onClick={() => { setCustomerName(savedCustomer.name); setCustomerAddress(savedCustomer.address); setCustomerPhone(savedCustomer.phone) }}
+                className="w-full border-2 border-primary/40 text-primary bg-primary/5 hover:bg-primary/10 h-10 text-sm rounded-lg font-medium transition-colors cursor-pointer"
+              >
+                استعادة بياناتي المحفوظة
+              </button>
+            )}
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">الاسم</label>
               <input
