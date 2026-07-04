@@ -73,15 +73,6 @@ export function Footer() {
           <p className="text-muted-foreground text-sm">
             &copy; {new Date().getFullYear()} حاتي الأصلي. جميع الحقوق محفوظة.
           </p>
-          <p className="text-muted-foreground text-xs">
-            صنع بواسطة{" "}
-            <button
-              onClick={() => setShowDev(true)}
-              className="font-medium text-primary underline underline-offset-2 hover:text-primary/80 transition-colors cursor-pointer"
-            >
-              عمر محمود
-            </button>
-          </p>
         </div>
       </div>
 
