@@ -74,12 +74,12 @@ export function Footer() {
             &copy; {new Date().getFullYear()} حاتي الأصلي. جميع الحقوق محفوظة.
           </p>
           <p className="text-muted-foreground text-xs">
-            Created with{" "}
+            صنع بواسطة{" "}
             <button
               onClick={() => setShowDev(true)}
               className="font-medium text-primary underline underline-offset-2 hover:text-primary/80 transition-colors cursor-pointer"
             >
-              Omar Mahmoud
+              عمر محمود
             </button>
           </p>
         </div>
@@ -88,7 +88,7 @@ export function Footer() {
       <Dialog open={showDev} onOpenChange={setShowDev}>
         <DialogContent dir="rtl" className="sm:max-w-[350px]">
           <DialogHeader>
-            <DialogTitle className="text-center font-display text-xl">Omar Mahmoud</DialogTitle>
+            <DialogTitle className="text-center font-display text-xl">عمر محمود</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col items-center gap-4 py-4">
             <p className="text-muted-foreground text-sm text-center">للتواصل مع المطور</p>
