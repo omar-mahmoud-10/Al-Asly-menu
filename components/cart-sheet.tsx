@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { ShoppingCart, Plus, Minus, Trash2, MessageCircle, Package, Bike, Utensils } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
@@ -39,6 +39,7 @@ export function CartSheet() {
   const [customerPhone, setCustomerPhone] = useState("")
   const [customerGuests, setCustomerGuests] = useState("")
   const [customerArrivalTime, setCustomerArrivalTime] = useState("")
+  const timeInputRef = useRef<HTMLInputElement>(null)
   const [shouldWiggle, setShouldWiggle] = useState(false)
   const [sending, setSending] = useState(false)
   const [showPayment, setShowPayment] = useState(false)
@@ -337,9 +338,12 @@ export function CartSheet() {
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-1">وقت الوصول</label>
                   <input
+                    ref={timeInputRef}
                     type="time"
                     value={customerArrivalTime}
                     onChange={(e) => setCustomerArrivalTime(e.target.value)}
+                    onClick={(e) => { if (typeof (e.target as HTMLInputElement).showPicker === 'function') { (e.target as HTMLInputElement).showPicker() } }}
+                    step="60"
                     className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>

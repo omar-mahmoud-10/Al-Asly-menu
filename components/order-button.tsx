@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useCallback, useEffect } from "react"
+import React, { useState, useCallback, useEffect, useRef } from "react"
 import { Plus, ShoppingCart, Check, MessageCircle, Utensils, Package, Bike } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -51,6 +51,7 @@ export function OrderButton({ itemName, itemPrice, variant = "card", priceOption
   const [customerPhone, setCustomerPhone] = useState("")
   const [customerGuests, setCustomerGuests] = useState("")
   const [customerArrivalTime, setCustomerArrivalTime] = useState("")
+  const timeInputRef = useRef<HTMLInputElement>(null)
   const [lastOption, setLastOption] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
   const [showPayment, setShowPayment] = useState(false)
@@ -383,9 +384,12 @@ export function OrderButton({ itemName, itemPrice, variant = "card", priceOption
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-1">وقت الوصول</label>
                   <input
+                    ref={timeInputRef}
                     type="time"
                     value={customerArrivalTime}
                     onChange={(e) => setCustomerArrivalTime(e.target.value)}
+                    onClick={(e) => { if (typeof (e.target as HTMLInputElement).showPicker === 'function') { (e.target as HTMLInputElement).showPicker() } }}
+                    step="60"
                     className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
