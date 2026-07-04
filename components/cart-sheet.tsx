@@ -76,7 +76,7 @@ export function CartSheet() {
     } else if (orderType === "دليفرى") {
       header = `السلام عليكم ورحمة الله وبركاته\nعاوز أطلب توصيل من ${branchName}\nالاسم: ${name}\nالعنوان: ${address}\nرقم التليفون: ${phone}${paymentLine}`
     } else {
-      header = `السلام عليكم ورحمة الله وبركاته\nعاوز أطلب صالة من ${branchName}${paymentLine}`
+      header = `السلام عليكم ورحمة الله وبركاته\nعاوز أطلب صالة من ${branchName}\nالاسم: ${name}${paymentLine}`
     }
 
     const footer = orderType === "دليفرى" ? `\n\n${total}\n\nيا ريت تقولي سعر التوصيل كام عشان أحسبه مع الفاتورة؟` : `\n\n${total}`

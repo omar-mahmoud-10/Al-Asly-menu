@@ -190,7 +190,7 @@ export function OrderButton({ itemName, itemPrice, variant = "card", priceOption
       header = `السلام عليكم ورحمة الله وبركاته،\nعاوز أطلب توصيل من ${selectedBranch.name}\nالاسم: ${name}\nالعنوان: ${address}\nرقم التليفون: ${phone}${paymentLine}`
       footer = `\n\nالمجموع: ${total} جنيه\nيا ريت تأكديلي سعر الأوردر كام وسعر التوصيل كام؟`
     } else {
-      header = `السلام عليكم ورحمة الله وبركاته،\nعاوز أطلب صالة من ${selectedBranch.name}${paymentLine}`
+      header = `السلام عليكم ورحمة الله وبركاته،\nعاوز أطلب صالة من ${selectedBranch.name}\nالاسم: ${name}${paymentLine}`
       footer = `\n\nالمجموع: ${total} جنيه\nيا ريت تأكديلي سعر الأوردر كام؟`
     }
 

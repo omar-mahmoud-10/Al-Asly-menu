@@ -1,7 +1,13 @@
+"use client"
+
+import { useState } from "react"
 import Image from "next/image"
-import { MapPin, Phone, Clock, Store } from "lucide-react"
+import { MapPin, Phone, Clock, Store, MessageCircle } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 
 export function Footer() {
+  const [showDev, setShowDev] = useState(false)
   return (
     <footer className="bg-card border-t border-border py-5 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
@@ -63,12 +69,43 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-border/50 mt-5 pt-4 text-center">
+        <div className="border-t border-border/50 mt-5 pt-4 text-center space-y-2">
           <p className="text-muted-foreground text-sm">
             &copy; {new Date().getFullYear()} حاتي الأصلي. جميع الحقوق محفوظة.
           </p>
+          <p className="text-muted-foreground text-xs">
+            Created with{" "}
+            <button
+              onClick={() => setShowDev(true)}
+              className="font-medium text-primary underline underline-offset-2 hover:text-primary/80 transition-colors cursor-pointer"
+            >
+              Omar Mahmoud
+            </button>
+          </p>
         </div>
       </div>
+
+      <Dialog open={showDev} onOpenChange={setShowDev}>
+        <DialogContent dir="rtl" className="sm:max-w-[350px]">
+          <DialogHeader>
+            <DialogTitle className="text-center font-display text-xl">Omar Mahmoud</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4 py-4">
+            <p className="text-muted-foreground text-sm text-center">للتواصل مع المطور</p>
+            <div className="flex items-center gap-3 w-full bg-muted/50 rounded-lg px-4 py-3">
+              <Phone className="w-4 h-4 text-primary shrink-0" />
+              <span dir="ltr" className="text-foreground text-sm">+201090862740</span>
+            </div>
+            <Button
+              onClick={() => window.open("https://wa.me/201090862740", "_blank")}
+              className="w-full bg-primary hover:bg-primary/80 text-primary-foreground gap-2 h-11 rounded-lg"
+            >
+              <MessageCircle className="w-4 h-4" />
+              تواصل عبر واتساب
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </footer>
   )
 }
