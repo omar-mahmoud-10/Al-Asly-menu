@@ -37,11 +37,13 @@ export function CartSheet() {
   const [customerName, setCustomerName] = useState("")
   const [customerAddress, setCustomerAddress] = useState("")
   const [customerPhone, setCustomerPhone] = useState("")
+  const [customerGuests, setCustomerGuests] = useState("")
+  const [customerArrivalTime, setCustomerArrivalTime] = useState("")
   const [shouldWiggle, setShouldWiggle] = useState(false)
   const [sending, setSending] = useState(false)
   const [showPayment, setShowPayment] = useState(false)
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null)
-  const [savedCustomer, setSavedCustomer] = useState<{ name: string; address: string; phone: string } | null>(null)
+  const [savedCustomer, setSavedCustomer] = useState<{ name: string; address: string; phone: string; guests?: string; arrivalTime?: string } | null>(null)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -76,7 +78,7 @@ export function CartSheet() {
     } else if (orderType === "دليفرى") {
       header = `السلام عليكم ورحمة الله وبركاته\nعاوز أطلب توصيل من ${branchName}\nالاسم: ${name}\nالعنوان: ${address}\nرقم التليفون: ${phone}${paymentLine}`
     } else {
-      header = `السلام عليكم ورحمة الله وبركاته\nعاوز أطلب صالة من ${branchName}\nالاسم: ${name}${paymentLine}`
+      header = `السلام عليكم ورحمة الله وبركاته\nعاوز أطلب صالة من ${branchName}\nالاسم: ${name}\nرقم التليفون: ${phone}\nعدد الأفراد: ${customerGuests}\nوقت الوصول: ${customerArrivalTime}${paymentLine}`
     }
 
     const footer = orderType === "دليفرى" ? `\n\n${total}\n\nيا ريت تقولي سعر التوصيل كام عشان أحسبه مع الفاتورة؟` : `\n\n${total}`
@@ -132,7 +134,7 @@ export function CartSheet() {
     const message = buildMessage(selectedBranch.name, orderType, name, address, phone)
     window.open(`https://wa.me/${selectedBranch.phone}?text=${encodeURIComponent(message)}`, "_blank")
     saveOrderToDB(orderType, name, address, phone).finally(() => setSending(false))
-    if (name) localStorage.setItem("customerData", JSON.stringify({ name, address, phone }))
+    if (name) localStorage.setItem("customerData", JSON.stringify({ name, address, phone, guests: customerGuests, arrivalTime: customerArrivalTime }))
     setShowCustomerForm(false)
     setShowOrderTypeDialog(false)
     setShowPayment(false)
@@ -144,6 +146,8 @@ export function CartSheet() {
     setCustomerName("")
     setCustomerAddress("")
     setCustomerPhone("")
+    setCustomerGuests("")
+    setCustomerArrivalTime("")
     clearCart()
   }
 
@@ -291,7 +295,7 @@ export function CartSheet() {
           <div className="flex flex-col gap-4 py-4">
             {savedCustomer && (
               <button
-                onClick={() => { setCustomerName(savedCustomer.name); setCustomerAddress(savedCustomer.address); setCustomerPhone(savedCustomer.phone) }}
+                onClick={() => { setCustomerName(savedCustomer.name); setCustomerAddress(savedCustomer.address); setCustomerPhone(savedCustomer.phone); setCustomerGuests(savedCustomer.guests || ""); setCustomerArrivalTime(savedCustomer.arrivalTime || "") }}
                 className="w-full border-2 border-primary/40 text-primary bg-primary/5 hover:bg-primary/10 h-10 text-sm rounded-lg font-medium transition-colors cursor-pointer"
               >
                 استعادة بياناتي المحفوظة
@@ -307,6 +311,40 @@ export function CartSheet() {
                 className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
+            {selectedOrderType?.id === "dinein" && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">رقم التليفون</label>
+                  <input
+                    type="tel"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    placeholder="أدخل رقم الهاتف"
+                    className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">عدد الأفراد</label>
+                  <input
+                    type="number"
+                    value={customerGuests}
+                    onChange={(e) => setCustomerGuests(e.target.value)}
+                    placeholder="مثلاً: 4"
+                    min="1"
+                    className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">وقت الوصول</label>
+                  <input
+                    type="time"
+                    value={customerArrivalTime}
+                    onChange={(e) => setCustomerArrivalTime(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              </>
+            )}
             {selectedOrderType?.id === "delivery" && (
               <>
                 <div>
@@ -368,7 +406,8 @@ export function CartSheet() {
               disabled={
                 sending ||
                 !customerName.trim() ||
-                (selectedOrderType?.id === "delivery" && (!customerAddress.trim() || !customerPhone.trim()))
+                (selectedOrderType?.id === "delivery" && (!customerAddress.trim() || !customerPhone.trim())) ||
+                (selectedOrderType?.id === "dinein" && (!customerPhone.trim() || !customerGuests.trim() || !customerArrivalTime.trim()))
               }
               className="w-full bg-primary hover:bg-primary/80 text-primary-foreground h-12 text-base rounded-lg mt-2 disabled:opacity-50"
             >
