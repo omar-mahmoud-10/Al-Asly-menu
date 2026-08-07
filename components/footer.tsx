@@ -71,7 +71,7 @@ export function Footer() {
 
         <div className="border-t border-border/50 mt-5 pt-4 text-center space-y-2">
           <p className="text-muted-foreground text-sm">
-            &copy; {new Date().getFullYear()} حاتي الأصلي. جميع الحقوق محفوظة.
+            صنع بواسطة عمر محمود
           </p>
         </div>
       </div>
