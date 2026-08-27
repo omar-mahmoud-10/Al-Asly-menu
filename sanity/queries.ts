@@ -85,23 +85,25 @@ export async function getSiteSettings() {
 }
 
 export async function getStaffByEmail(email: string) {
+  const { writeClient } = await import('./lib/client')
   const query = `*[_type == "staffMember" && email == $email][0] {
     _id,
     email,
     role,
     createdAt
   }`
-  return client.fetch(query, { email })
+  return writeClient.fetch(query, { email })
 }
 
 export async function getAllStaff() {
+  const { writeClient } = await import('./lib/client')
   const query = `*[_type == "staffMember"] | order(createdAt asc) {
     _id,
     email,
     role,
     createdAt
   }`
-  return client.fetch(query)
+  return writeClient.fetch(query)
 }
 
 export async function createStaffMember(data: {
@@ -128,7 +130,7 @@ export async function deleteStaffMember(id: string) {
 
 export async function deleteAllOrders() {
   const { writeClient } = await import('./lib/client')
-  const ids = await client.fetch(groq`*[_type == "order"]._id`)
+  const ids = await writeClient.fetch(groq`*[_type == "order"]._id`)
   if (ids.length === 0) return
   const transaction = ids.map((id: string) => writeClient.delete(id))
   await writeClient.transaction(transaction).commit()
