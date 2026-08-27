@@ -85,25 +85,23 @@ export async function getSiteSettings() {
 }
 
 export async function getStaffByEmail(email: string) {
-  const { writeClient } = await import('./lib/client')
   const query = `*[_type == "staffMember" && email == $email][0] {
     _id,
     email,
     role,
     createdAt
   }`
-  return writeClient.fetch(query, { email })
+  return client.fetch(query, { email })
 }
 
 export async function getAllStaff() {
-  const { writeClient } = await import('./lib/client')
   const query = `*[_type == "staffMember"] | order(createdAt asc) {
     _id,
     email,
     role,
     createdAt
   }`
-  return writeClient.fetch(query)
+  return client.fetch(query)
 }
 
 export async function createStaffMember(data: {
@@ -130,7 +128,7 @@ export async function deleteStaffMember(id: string) {
 
 export async function deleteAllOrders() {
   const { writeClient } = await import('./lib/client')
-  const ids = await writeClient.fetch(groq`*[_type == "order"]._id`)
+  const ids = await client.fetch(groq`*[_type == "order"]._id`)
   if (ids.length === 0) return
   const transaction = ids.map((id: string) => writeClient.delete(id))
   await writeClient.transaction(transaction).commit()
@@ -148,7 +146,6 @@ export async function createAccessRequest(email: string, googleToken?: string) {
 }
 
 export async function getPendingAccessRequests() {
-  const { writeClient } = await import('./lib/client')
   const query = `*[_type == "accessRequest" && status == "pending"] | order(createdAt desc) {
     _id,
     email,
@@ -156,7 +153,7 @@ export async function getPendingAccessRequests() {
     googleToken,
     createdAt
   }`
-  return writeClient.fetch(query)
+  return client.fetch(query)
 }
 
 export async function approveAccessRequest(id: string) {
