@@ -46,8 +46,9 @@ export async function POST(request: Request) {
     setAuthCookie(response, token)
 
     return response
-  } catch {
-    return NextResponse.json({ error: 'حدث خطأ في الخادم' }, { status: 500 })
+  } catch (error: any) {
+    console.error('Login error:', error?.message, error)
+    return NextResponse.json({ error: 'حدث خطأ في الخادم', details: error?.message }, { status: 500 })
   }
 }
 
