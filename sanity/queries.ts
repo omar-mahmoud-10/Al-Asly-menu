@@ -148,6 +148,7 @@ export async function createAccessRequest(email: string, googleToken?: string) {
 }
 
 export async function getPendingAccessRequests() {
+  const { writeClient } = await import('./lib/client')
   const query = `*[_type == "accessRequest" && status == "pending"] | order(createdAt desc) {
     _id,
     email,
@@ -155,7 +156,7 @@ export async function getPendingAccessRequests() {
     googleToken,
     createdAt
   }`
-  return client.fetch(query)
+  return writeClient.fetch(query)
 }
 
 export async function approveAccessRequest(id: string) {
