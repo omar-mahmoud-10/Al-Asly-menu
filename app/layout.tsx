@@ -28,11 +28,11 @@ export const metadata: Metadata = {
   generator: 'v0.app',
   manifest: '/manifest.json',
   icons: {
-    icon: '/logo_metaTitle.jpg',
-    apple: '/logo_metaTitle.jpg',
+    icon: '/logo.jpg',
+    apple: '/logo.jpg',
   },
   openGraph: {
-    images: ['/logo_metaTitle.jpg'],
+    images: ['/logo.jpg'],
   },
   appleWebApp: {
     capable: true,

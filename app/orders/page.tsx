@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { GoogleLogin } from '@react-oauth/google'
+import { isGoogleAuthEnabled } from '@/components/google-provider'
 import { Clock, MapPin, Phone, User, Package, Bike, Utensils, ShoppingBag, AlertTriangle, CheckCircle, Eye, ChevronDown, ChevronUp, Bell, LogOut, RefreshCw, Shield, Mail, Trash2 } from 'lucide-react'
 
 interface OrderItem {
@@ -519,19 +520,23 @@ export default function OrdersDashboard() {
             <p className="text-muted-foreground text-sm">سجل الدخول بحساب Google المصرح به</p>
           </div>
 
-          <div className="flex justify-center overflow-hidden">
-            <div className="scale-[0.85] sm:scale-100 origin-center">
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={() => setGoogleError(true)}
-                theme="outline"
-                size="large"
-                text="signin_with"
-                shape="rectangular"
-                width={320}
-              />
+          {isGoogleAuthEnabled() ? (
+            <div className="flex justify-center overflow-hidden">
+              <div className="scale-[0.85] sm:scale-100 origin-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => setGoogleError(true)}
+                  theme="outline"
+                  size="large"
+                  text="signin_with"
+                  shape="rectangular"
+                  width={320}
+                />
+              </div>
             </div>
-          </div>
+          ) : (
+            <p className="text-center text-destructive text-sm">Google login is not configured. Set NEXT_PUBLIC_GOOGLE_CLIENT_ID.</p>
+          )}
 
           {googleError && (
             <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-4 text-center">
