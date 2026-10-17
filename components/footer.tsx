@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button"
 
 export function Footer() {
-  const [showDev, setShowDev] = useState(false)
+  const [showContact, setShowContact] = useState(false)
   return (
     <footer className="bg-card border-t border-border py-5 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
@@ -72,12 +72,20 @@ export function Footer() {
         <div className="border-t border-border/50 mt-5 pt-4 text-center space-y-2">
           <p className="text-muted-foreground text-sm">
             صنع بواسطة عمر محمود{" "}
-            <span dir="ltr">+201090862740</span>
+            <button
+              type="button"
+              dir="ltr"
+              onClick={() => setShowContact(true)}
+              aria-label="طرق التواصل مع عمر محمود"
+              className="font-medium text-primary underline decoration-dotted underline-offset-2 hover:decoration-solid transition-colors"
+            >
+              +201090862740
+            </button>
           </p>
         </div>
       </div>
 
-      <Dialog open={showDev} onOpenChange={setShowDev}>
+      <Dialog open={showContact} onOpenChange={setShowContact}>
         <DialogContent dir="rtl" className="sm:max-w-[350px]">
           <DialogHeader>
             <DialogTitle className="text-center font-display text-xl">عمر محمود</DialogTitle>
@@ -88,12 +96,22 @@ export function Footer() {
               <Phone className="w-4 h-4 text-primary shrink-0" />
               <span dir="ltr" className="text-foreground text-sm">+201090862740</span>
             </div>
-            <Button
-              onClick={() => window.open("https://wa.me/201090862740", "_blank")}
-              className="w-full bg-primary hover:bg-primary/80 text-primary-foreground gap-2 h-11 rounded-lg"
-            >
-              <MessageCircle className="w-4 h-4" />
-              تواصل عبر واتساب
+            <Button asChild className="w-full gap-2 h-11 rounded-lg">
+              <a href="tel:+201090862740" onClick={() => setShowContact(false)}>
+                <Phone className="w-4 h-4" />
+                اتصال هاتفي
+              </a>
+            </Button>
+            <Button asChild variant="outline" className="w-full gap-2 h-11 rounded-lg">
+              <a
+                href="https://wa.me/201090862740"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setShowContact(false)}
+              >
+                <MessageCircle className="w-4 h-4" />
+                تواصل عبر واتساب
+              </a>
             </Button>
           </div>
         </DialogContent>
