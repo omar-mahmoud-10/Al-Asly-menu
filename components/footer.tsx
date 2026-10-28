@@ -21,7 +21,7 @@ export function Footer() {
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:flex sm:justify-center sm:gap-32">
           <div>
             <h3 className="font-display text-lg text-primary mb-3 flex items-center gap-2">
               <Store className="w-4 h-4" /> فروعنا
